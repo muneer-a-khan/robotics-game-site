@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Pre-configured circuit challenges
+model Circuit {
+  id                  Int      @id @default(autoincrement())
+  circuitNumber       Int      @map("circuit_number")
+  difficulty          String   // 'easy' or 'hard'
+  description         String?
+  targetComponents    Json     @map("target_components") // Array of component placements
+  targetConnections   Json     @map("target_connections") // Array of wire connections
+  timeLimit           Int      @default(180) @map("time_limit") // seconds
+  createdAt           DateTime @default(now()) @map("created_at")
+  
+  @@unique([circuitNumber, difficulty])
+  @@map("circuits")
+}
+
+// Game sessions with real-time action tracking
+model GameSession {
+  id            String   @id @default(uuid())
+  userId        String?  @map("user_id")
+  circuitNumber Int      @map("circuit_number")
+  difficulty    String
+  completed     Boolean  @default(false)
+  timeTaken     Int?     @map("time_taken") // seconds
+  isCorrect     Boolean? @map("is_correct")
+  createdAt     DateTime @default(now()) @map("created_at")
+  completedAt   DateTime? @map("completed_at")
+  
+  actions       GameAction[]
+  
+  @@map("game_sessions")
+}
+
+// Real-time tracking of every action
+model GameAction {
+  id            String      @id @default(uuid())
+  sessionId     String      @map("session_id")
+  actionType    String      @map("action_type") // 'place_component', 'remove_component', 'add_wire', 'remove_wire'
+  componentType String?     @map("component_type")
+  componentId   String?     @map("component_id")
+  gridPosition  Json?       @map("grid_position") // {x, y}
+  orientation   Int?        // 0, 90, 180, 270
+  wireData      Json?       @map("wire_data") // {fromId, toId, fromPort, toPort}
+  timestamp     DateTime    @default(now())
+  
+  session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId])
+  @@map("game_actions")
+}
