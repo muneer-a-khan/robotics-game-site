@@ -23,19 +23,19 @@ export default function Home() {
             </li>
             <li className="flex items-start">
               <span className="text-indigo-600 font-bold mr-2">3.</span>
-              <span>Drag components from the toolbox to the board</span>
+              <span><strong>Click</strong> a component in the toolbox to select it</span>
             </li>
             <li className="flex items-start">
               <span className="text-indigo-600 font-bold mr-2">4.</span>
-              <span>Connect components by clicking the connect button</span>
+              <span><strong>Click</strong> a green snap point on the board to place it</span>
             </li>
             <li className="flex items-start">
               <span className="text-indigo-600 font-bold mr-2">5.</span>
-              <span>Rotate components using the rotate option</span>
+              <span>Double-click components to rotate, right-click to remove</span>
             </li>
             <li className="flex items-start">
               <span className="text-indigo-600 font-bold mr-2">6.</span>
-              <span>Click done or wait for auto-complete after 3 minutes</span>
+              <span>Connections auto-detect! Click done when finished</span>
             </li>
           </ul>
         </div>

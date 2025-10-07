@@ -1,6 +1,8 @@
 'use client';
 
-import { Difficulty } from '@/types';
+// Game Header Component
+
+import { Difficulty } from '@/types/game.types';
 
 interface GameHeaderProps {
   circuitNumber: number;
@@ -9,7 +11,7 @@ interface GameHeaderProps {
   onDone: () => void;
 }
 
-export default function GameHeader({
+export function GameHeader({
   circuitNumber,
   difficulty,
   timeRemaining,

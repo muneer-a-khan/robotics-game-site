@@ -1,44 +1,38 @@
-import { NextResponse } from 'next/server';
-import { 
-  trackPlaceComponent, 
-  trackRemoveComponent, 
-  trackAddWire, 
-  trackRemoveWire 
-} from '@/utils/database';
+// Record Game Actions API
 
-export async function POST(request: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(request: NextRequest) {
   try {
-    const { actionType, sessionId, data } = await request.json();
-
-    let result;
-    switch (actionType) {
-      case 'place_component':
-        result = await trackPlaceComponent(
-          sessionId,
-          data.componentType,
-          data.componentId,
-          data.gridPosition,
-          data.orientation
-        );
-        break;
-      case 'remove_component':
-        result = await trackRemoveComponent(sessionId, data.componentId);
-        break;
-      case 'add_wire':
-        result = await trackAddWire(sessionId, data.wireData);
-        break;
-      case 'remove_wire':
-        result = await trackRemoveWire(sessionId, data.wireData);
-        break;
-      default:
-        return NextResponse.json({ error: 'Invalid action type' }, { status: 400 });
+    const { sessionId, actions } = await request.json();
+    
+    // Validate input
+    if (!sessionId || !actions || !Array.isArray(actions)) {
+      return NextResponse.json(
+        { error: 'Session ID and actions array are required' },
+        { status: 400 }
+      );
     }
-
-    return NextResponse.json(result);
+    
+    // Batch insert actions
+    await prisma.gameAction.createMany({
+      data: actions.map((action: any) => ({
+        sessionId,
+        actionType: action.actionType,
+        componentType: action.componentType,
+        componentId: action.componentId,
+        snapPointIds: action.snapPointIds,
+        orientation: action.orientation,
+        timestamp: action.timestamp || new Date(),
+      })),
+    });
+    
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error tracking action:', error);
+    console.error('Error recording actions:', error);
     return NextResponse.json(
-      { error: 'Failed to track action' },
+      { error: 'Failed to record actions' },
       { status: 500 }
     );
   }

@@ -1,16 +1,18 @@
 'use client';
 
-import { Difficulty } from '@/types';
+// Difficulty Selector Modal
 
-interface DifficultySelectorProps {
+import { Difficulty } from '@/types/game.types';
+
+interface DifficultyModalProps {
   onSelect: (difficulty: Difficulty) => void;
   circuitNumber: number;
 }
 
-export default function DifficultySelector({
+export function DifficultyModal({
   onSelect,
   circuitNumber,
-}: DifficultySelectorProps) {
+}: DifficultyModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">

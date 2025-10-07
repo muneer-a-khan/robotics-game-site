@@ -1,10 +1,32 @@
-import { NextResponse } from 'next/server';
-import { completeGameSession } from '@/utils/database';
+// Complete Game Session API
 
-export async function POST(request: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(request: NextRequest) {
   try {
-    const { sessionId, timeTaken, isCorrect } = await request.json();
-    const session = await completeGameSession(sessionId, timeTaken, isCorrect);
+    const { sessionId, timeTaken, isCorrect, errorDetails } = await request.json();
+    
+    // Validate input
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: 'Session ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Update session
+    const session = await prisma.gameSession.update({
+      where: { id: sessionId },
+      data: {
+        completed: true,
+        timeTaken,
+        isCorrect,
+        errorDetails,
+        completedAt: new Date(),
+      },
+    });
+    
     return NextResponse.json(session);
   } catch (error) {
     console.error('Error completing session:', error);
