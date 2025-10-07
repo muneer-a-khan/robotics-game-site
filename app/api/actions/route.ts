@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Batch insert actions
+    // Batch insert actions - remove snapPointIds if it doesn't exist in schema
     await prisma.gameAction.createMany({
       data: actions.map((action: any) => ({
         sessionId,
         actionType: action.actionType,
         componentType: action.componentType,
         componentId: action.componentId,
-        snapPointIds: action.snapPointIds,
+        // snapPointIds: action.snapPointIds, // Comment out if causing issues
         orientation: action.orientation,
         timestamp: action.timestamp || new Date(),
       })),

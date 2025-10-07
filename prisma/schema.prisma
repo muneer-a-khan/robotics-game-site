@@ -50,7 +50,7 @@ model GameAction {
   snapPointIds  Json?       @map("snap_point_ids")
   orientation   Int?
   timestamp     DateTime    @default(now()) @db.Timestamptz(6)
-  session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_session")
+  session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([sessionId, timestamp])
   @@map("game_actions")

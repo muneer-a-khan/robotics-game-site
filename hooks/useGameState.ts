@@ -29,12 +29,13 @@ export function useGameState() {
     const centerY = (terminal1.y + terminal2.y) / 2;
     
     // Create a virtual anchor point at the center
-    const anchorPoint = {
+    const anchorPoint: SnapPoint = {
       id: `center-${componentId}`,
       row: Math.round(centerY / GRID_CONFIG.CELL_SIZE),
       col: Math.round(centerX / GRID_CONFIG.CELL_SIZE),
       x: centerX,
       y: centerY,
+      occupied: false,
     };
     
     // Get occupied snap points (but we'll override the positioning)
@@ -54,11 +55,15 @@ export function useGameState() {
       terminals: [
         {
           id: `terminal-1-${componentId}`,
+          componentId,
+          position: 'left',
           snapPoint: terminal1,
           isOccupied: true,
         },
         {
           id: `terminal-2-${componentId}`,
+          componentId,
+          position: 'right',
           snapPoint: terminal2,
           isOccupied: true,
         }

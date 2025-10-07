@@ -66,8 +66,9 @@ function GameContent() {
       setShowDifficultySelector(false);
       
       // Place battery holder at position (0, 2) - Row C, Column 1
-      const batterySnapPoint = snapGrid[2][0]; // Row C (index 2), Column 1 (index 0)
-      placeComponent('battery_holder', batterySnapPoint, 0);
+      const batterySnapPoint1 = snapGrid[2][0]; // Row C (index 2), Column 1 (index 0)
+      const batterySnapPoint2 = snapGrid[2][1]; // Row C (index 2), Column 2 (index 1)
+      placeComponent('battery_holder', batterySnapPoint1, batterySnapPoint2, 0);
       
     } catch (error) {
       console.error('Error starting game:', error);

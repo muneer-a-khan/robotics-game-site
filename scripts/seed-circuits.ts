@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { Component, Wire, getConnectionPointsForType } from '../types';
+import { PhysicalComponent, Connection } from '../types/component.types';
 
 const prisma = new PrismaClient();
 
@@ -12,13 +12,7 @@ async function main() {
   console.log('🌱 Seeding circuit challenges...');
 
   // Circuit 1 - Easy: Build a circuit that lights up with the switch
-  const circuit1Easy: {
-    circuitNumber: number;
-    difficulty: string;
-    description: string;
-    targetComponents: Component[];
-    targetConnections: Wire[];
-  } = {
+  const circuit1Easy = {
     circuitNumber: 1,
     difficulty: 'easy',
     description: 'Build a circuit that lights up with the switch',
@@ -26,46 +20,55 @@ async function main() {
       {
         id: 'battery-1',
         type: 'battery_holder',
-        gridPosition: { x: 0, y: 1 }, // Far left, centered vertically (3x2 size)
+        gridPosition: { x: 0, y: 1 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('battery_holder', 'battery-1'),
+        connectionPoints: [
+          { id: 'battery-1-cp-0', position: 'top-right' },
+          { id: 'battery-1-cp-1', position: 'bottom-right' }
+        ],
       },
       {
         id: 'switch-1',
         type: 'slide_switch',
-        gridPosition: { x: 4, y: 2 }, // Middle of board
+        gridPosition: { x: 4, y: 2 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('slide_switch', 'switch-1'),
+        connectionPoints: [
+          { id: 'switch-1-cp-0', position: 'left' },
+          { id: 'switch-1-cp-1', position: 'right' }
+        ],
       },
       {
         id: 'led-1',
         type: 'led_yellow',
-        gridPosition: { x: 4, y: 0 }, // Top middle
+        gridPosition: { x: 4, y: 0 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('led_yellow', 'led-1'),
+        connectionPoints: [
+          { id: 'led-1-cp-0', position: 'left' },
+          { id: 'led-1-cp-1', position: 'right' }
+        ],
       },
     ],
     targetConnections: [
       {
         id: 'wire-1',
-        fromConnectionPointId: 'battery-1-cp-0', // Top-right corner of battery
-        toConnectionPointId: 'switch-1-cp-0', // Left side of switch
+        fromConnectionPointId: 'battery-1-cp-0',
+        toConnectionPointId: 'switch-1-cp-0',
       },
       {
         id: 'wire-2',
-        fromConnectionPointId: 'switch-1-cp-1', // Right side of switch
-        toConnectionPointId: 'led-1-cp-0', // Left side of LED
+        fromConnectionPointId: 'switch-1-cp-1',
+        toConnectionPointId: 'led-1-cp-0',
       },
       {
         id: 'wire-3',
-        fromConnectionPointId: 'led-1-cp-1', // Right side of LED
-        toConnectionPointId: 'battery-1-cp-1', // Bottom-right corner of battery (completing circuit)
+        fromConnectionPointId: 'led-1-cp-1',
+        toConnectionPointId: 'battery-1-cp-1',
       },
     ],
   };
 
   // Circuit 1 - Hard: Build a circuit that emits red light with the resistor
-  const circuit1Hard: typeof circuit1Easy = {
+  const circuit1Hard = {
     circuitNumber: 1,
     difficulty: 'hard',
     description: 'Build a circuit that emits red light with the resistor',
@@ -75,27 +78,36 @@ async function main() {
         type: 'battery_holder',
         gridPosition: { x: 0, y: 1 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('battery_holder', 'battery-1'),
+        connectionPoints: [
+          { id: 'battery-1-cp-0', position: 'top-right' },
+          { id: 'battery-1-cp-1', position: 'bottom-right' }
+        ],
       },
       {
         id: 'resistor-1',
         type: 'resistor',
         gridPosition: { x: 4, y: 1 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('resistor', 'resistor-1'),
+        connectionPoints: [
+          { id: 'resistor-1-cp-0', position: 'left' },
+          { id: 'resistor-1-cp-1', position: 'right' }
+        ],
       },
       {
         id: 'led-1',
         type: 'led_red',
         gridPosition: { x: 4, y: 3 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('led_red', 'led-1'),
+        connectionPoints: [
+          { id: 'led-1-cp-0', position: 'left' },
+          { id: 'led-1-cp-1', position: 'right' }
+        ],
       },
     ],
     targetConnections: [
       {
         id: 'wire-1',
-        fromConnectionPointId: 'battery-1-cp-0', // Top-right corner
+        fromConnectionPointId: 'battery-1-cp-0',
         toConnectionPointId: 'resistor-1-cp-0',
       },
       {
@@ -106,13 +118,13 @@ async function main() {
       {
         id: 'wire-3',
         fromConnectionPointId: 'led-1-cp-1',
-        toConnectionPointId: 'battery-1-cp-1', // Bottom-right corner
+        toConnectionPointId: 'battery-1-cp-1',
       },
     ],
   };
 
   // Circuit 2 - Hard: Make a circuit that plays music on speaker
-  const circuit2Hard: typeof circuit1Easy = {
+  const circuit2Hard = {
     circuitNumber: 2,
     difficulty: 'hard',
     description: 'Make a circuit that plays music on speaker',
@@ -122,38 +134,50 @@ async function main() {
         type: 'battery_holder',
         gridPosition: { x: 0, y: 1 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('battery_holder', 'battery-1'),
+        connectionPoints: [
+          { id: 'battery-1-cp-0', position: 'top-right' },
+          { id: 'battery-1-cp-1', position: 'bottom-right' }
+        ],
       },
       {
         id: 'music-1',
         type: 'music_ic',
         gridPosition: { x: 4, y: 0 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('music_ic', 'music-1'),
+        connectionPoints: [
+          { id: 'music-1-cp-0', position: 'top-left' },
+          { id: 'music-1-cp-1', position: 'top-right' },
+          { id: 'music-1-cp-2', position: 'bottom-left' },
+          { id: 'music-1-cp-3', position: 'bottom-right' },
+          { id: 'music-1-cp-4', position: 'middle-right' }
+        ],
       },
       {
         id: 'speaker-1',
         type: 'speaker',
         gridPosition: { x: 4, y: 3 },
         orientation: 0,
-        connectionPoints: getConnectionPointsForType('speaker', 'speaker-1'),
+        connectionPoints: [
+          { id: 'speaker-1-cp-0', position: 'left' },
+          { id: 'speaker-1-cp-1', position: 'right' }
+        ],
       },
     ],
     targetConnections: [
       {
         id: 'wire-1',
-        fromConnectionPointId: 'battery-1-cp-0', // Top-right corner
-        toConnectionPointId: 'music-1-cp-0', // Top-left of music IC
+        fromConnectionPointId: 'battery-1-cp-0',
+        toConnectionPointId: 'music-1-cp-0',
       },
       {
         id: 'wire-2',
-        fromConnectionPointId: 'music-1-cp-4', // Middle-right of music IC
+        fromConnectionPointId: 'music-1-cp-4',
         toConnectionPointId: 'speaker-1-cp-0',
       },
       {
         id: 'wire-3',
         fromConnectionPointId: 'speaker-1-cp-1',
-        toConnectionPointId: 'battery-1-cp-1', // Bottom-right corner
+        toConnectionPointId: 'battery-1-cp-1',
       },
     ],
   };

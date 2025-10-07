@@ -253,7 +253,7 @@ export function updateGridOccupation(
       if (point.row >= 0 && point.row < newGrid.length && 
           point.col >= 0 && point.col < newGrid[0].length) {
         newGrid[point.row][point.col].occupied = true;
-        newGrid[point.row][point.col].componentId = component.id;
+        (newGrid[point.row][point.col] as any).componentId = component.id;
       }
     });
   });

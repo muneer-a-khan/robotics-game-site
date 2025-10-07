@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { Component, Wire, ActionType, ComponentType, GridPosition, Orientation, Circuit } from '@/types';
+import { ComponentType } from '@/types/component.types';
+import { Difficulty } from '@/types/game.types';
 
 /**
  * Create a new game session
@@ -24,107 +25,8 @@ export async function createGameSession(
   }
 }
 
-/**
- * Track a component placement action in real-time
- */
-export async function trackPlaceComponent(
-  sessionId: string,
-  componentType: ComponentType,
-  componentId: string,
-  gridPosition: GridPosition,
-  orientation: Orientation
-) {
-  try {
-    const action = await prisma.gameAction.create({
-      data: {
-        sessionId,
-        actionType: 'place_component',
-        componentType,
-        componentId,
-        gridPosition,
-        orientation,
-      },
-    });
-    return action;
-  } catch (error) {
-    console.error('Error tracking component placement:', error);
-    throw error;
-  }
-}
-
-/**
- * Track a component removal action in real-time
- */
-export async function trackRemoveComponent(
-  sessionId: string,
-  componentId: string
-) {
-  try {
-    const action = await prisma.gameAction.create({
-      data: {
-        sessionId,
-        actionType: 'remove_component',
-        componentId,
-      },
-    });
-    return action;
-  } catch (error) {
-    console.error('Error tracking component removal:', error);
-    throw error;
-  }
-}
-
-/**
- * Track a wire connection action in real-time
- */
-export async function trackAddWire(
-  sessionId: string,
-  wireData: {
-    fromId: string;
-    toId: string;
-    fromPort?: string;
-    toPort?: string;
-  }
-) {
-  try {
-    const action = await prisma.gameAction.create({
-      data: {
-        sessionId,
-        actionType: 'add_wire',
-        wireData,
-      },
-    });
-    return action;
-  } catch (error) {
-    console.error('Error tracking wire connection:', error);
-    throw error;
-  }
-}
-
-/**
- * Track a wire removal action in real-time
- */
-export async function trackRemoveWire(
-  sessionId: string,
-  wireData: {
-    fromId: string;
-    toId: string;
-  }
-) {
-  try {
-    const action = await prisma.gameAction.create({
-      data: {
-        sessionId,
-        actionType: 'remove_wire',
-        wireData,
-      },
-    });
-    return action;
-  } catch (error) {
-    console.error('Error tracking wire removal:', error);
-    throw error;
-  }
-}
+// Note: These tracking functions are now handled by the API routes
+// The database schema has been updated to match the new architecture
 
 /**
  * Complete a game session with validation results
@@ -225,8 +127,8 @@ export async function getLeaderboard(limit: number = 20) {
  */
 export async function getCircuitChallenge(
   circuitNumber: number,
-  difficulty: 'easy' | 'hard'
-): Promise<Circuit | null> {
+  difficulty: Difficulty
+) {
   try {
     const circuit = await prisma.circuit.findUnique({
       where: {
@@ -237,17 +139,7 @@ export async function getCircuitChallenge(
       },
     });
 
-    if (!circuit) return null;
-
-    return {
-      id: circuit.id,
-      circuitNumber: circuit.circuitNumber,
-      difficulty: circuit.difficulty as 'easy' | 'hard',
-      description: circuit.description || undefined,
-      targetComponents: circuit.targetComponents as Component[],
-      targetWires: circuit.targetConnections as Wire[],
-      timeLimit: circuit.timeLimit,
-    };
+    return circuit;
   } catch (error) {
     console.error('Error fetching circuit challenge:', error);
     throw error;
@@ -259,10 +151,10 @@ export async function getCircuitChallenge(
  */
 export async function saveCircuitChallenge(
   circuitNumber: number,
-  difficulty: 'easy' | 'hard',
+  difficulty: Difficulty,
   description: string,
-  targetComponents: Component[],
-  targetWires: Wire[],
+  targetComponents: any,
+  targetConnections: any,
   timeLimit: number = 180
 ) {
   try {
@@ -276,7 +168,7 @@ export async function saveCircuitChallenge(
       update: {
         description,
         targetComponents,
-        targetConnections: targetWires,
+        targetConnections,
         timeLimit,
       },
       create: {
@@ -284,7 +176,7 @@ export async function saveCircuitChallenge(
         difficulty,
         description,
         targetComponents,
-        targetConnections: targetWires,
+        targetConnections,
         timeLimit,
       },
     });
