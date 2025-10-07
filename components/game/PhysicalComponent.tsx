@@ -10,9 +10,10 @@ import { useGameState } from '@/hooks/useGameState';
 
 interface PhysicalComponentProps {
   component: PhysicalComponentType;
+  zIndex?: number;
 }
 
-export function PhysicalComponent({ component }: PhysicalComponentProps) {
+export function PhysicalComponent({ component, zIndex = 10 }: PhysicalComponentProps) {
   const { removeComponent, rotateComponent } = useGameState();
   const [isHovered, setIsHovered] = useState(false);
   
@@ -93,6 +94,7 @@ export function PhysicalComponent({ component }: PhysicalComponentProps) {
         height: size.height,
         transform: `rotate(${component.orientation}deg)`,
         transformOrigin: 'center center',
+        zIndex: zIndex,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

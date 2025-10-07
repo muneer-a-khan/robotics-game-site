@@ -7,41 +7,19 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     type: 'battery_holder',
     displayName: 'Battery Holder',
     width: 3,
-    height: 2,
+    height: 3,
     terminals: ['top-right', 'bottom-right'],
     canRotate: false,
     maxCount: 1,
     image: '/photos/components/battery_holder.png',
     color: '#DC2626'
   },
-  wire_1: {
-    type: 'wire_1',
-    displayName: 'Wire (1)',
-    width: 1,
-    height: 1,
-    terminals: ['left', 'right'],
-    canRotate: true,
-    maxCount: 20,
-    image: '/photos/components/wire.png',
-    color: '#2563EB'
-  },
-  wire_2: {
-    type: 'wire_2',
-    displayName: 'Wire (2)',
-    width: 2,
-    height: 1,
-    terminals: ['left', 'right'],
-    canRotate: true,
-    maxCount: 20,
-    image: '/photos/components/wire.png',
-    color: '#2563EB'
-  },
-  wire_3: {
-    type: 'wire_3',
-    displayName: 'Wire (3)',
+  wire: {
+    type: 'wire',
+    displayName: 'Wire',
     width: 3,
     height: 1,
-    terminals: ['left', 'right'],
+    terminals: ['center-left', 'center', 'center-right'],
     canRotate: true,
     maxCount: 20,
     image: '/photos/components/wire.png',
@@ -107,7 +85,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     displayName: 'U1 Music',
     width: 3,
     height: 2,
-    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-right'],
+    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-right'],
     canRotate: true,
     maxCount: 2,
     image: '/photos/components/U1_Music.png',
@@ -118,7 +96,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     displayName: 'U2 Alarm',
     width: 3,
     height: 2,
-    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-right'],
+    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-right'],
     canRotate: true,
     maxCount: 2,
     image: '/photos/components/U2_Alarm.png',
@@ -129,7 +107,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     displayName: 'U3 Space War',
     width: 3,
     height: 2,
-    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-right'],
+    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-right'],
     canRotate: true,
     maxCount: 2,
     image: '/photos/components/U3_Space_War.png',
@@ -182,9 +160,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
 };
 
 export const AVAILABLE_COMPONENTS: ComponentType[] = [
-  'wire_1',
-  'wire_2',
-  'wire_3',
+  'wire',
   'led_yellow',
   'led_red',
   'resistor',
@@ -201,10 +177,10 @@ export const AVAILABLE_COMPONENTS: ComponentType[] = [
 
 // Grid configuration
 export const GRID_CONFIG = {
-  ROWS: 7,      // A-G
-  COLS: 10,     // 1-10
+  ROWS: 5,      // A-E (up and down)
+  COLS: 7,      // 1-7 (side by side)
   CELL_SIZE: 80, // pixels between snap points
-  ROW_LABELS: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-  COL_LABELS: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+  ROW_LABELS: ['A', 'B', 'C', 'D', 'E'],
+  COL_LABELS: ['1', '2', '3', '4', '5', '6', '7']
 };
 

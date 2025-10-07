@@ -65,10 +65,11 @@ function GameContent() {
       startGame(session.id, selectedDifficulty, currentCircuit);
       setShowDifficultySelector(false);
       
-      // Place battery holder at position (0, 2) - Row C, Column 1
-      const batterySnapPoint1 = snapGrid[2][0]; // Row C (index 2), Column 1 (index 0)
-      const batterySnapPoint2 = snapGrid[2][1]; // Row C (index 2), Column 2 (index 1)
-      placeComponent('battery_holder', batterySnapPoint1, batterySnapPoint2, 0);
+      // Place battery holder at middle left position (0, 2) - Row C, Column 1
+      // Battery is 3x3, so it spans rows 1-3 (B-D) and columns 0-2 (1-3)
+      const batterySnapPoint1 = snapGrid[2][0]; // Row C (index 2), Column 1 (index 0) - top-right connection
+      const batterySnapPoint2 = snapGrid[2][0]; // Same point for now, will be updated in snap logic
+      placeComponent('battery_holder', batterySnapPoint1, batterySnapPoint2, 90); // Rotate 90 degrees right
       
     } catch (error) {
       console.error('Error starting game:', error);

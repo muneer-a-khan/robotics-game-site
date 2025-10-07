@@ -63,7 +63,8 @@ function canPlaceComponent(
   anchorPoint: SnapPoint,
   width: number,
   height: number,
-  snapGrid: SnapPoint[][]
+  snapGrid: SnapPoint[][],
+  allowTerminalSnapping: boolean = false
 ): boolean {
   // Check all snap points needed for this component
   for (let dy = 0; dy < height; dy++) {
@@ -80,7 +81,11 @@ function canPlaceComponent(
       
       // Check if occupied
       if (point.occupied) {
-        return false;
+        // If terminal snapping is allowed, we can place on occupied points
+        // This allows components to snap onto existing terminal connection points
+        if (!allowTerminalSnapping) {
+          return false;
+        }
       }
     }
   }
@@ -194,6 +199,18 @@ function getTerminalSnapPoint(
       row += Math.floor(height / 2);
       col += width - 1;
       break;
+    case 'center-right':
+      row += Math.floor(height / 2);
+      col += width - 1;
+      break;
+    case 'center-left':
+      row += Math.floor(height / 2);
+      // Already at left edge
+      break;
+    case 'center':
+      row += Math.floor(height / 2);
+      col += Math.floor(width / 2);
+      break;
   }
   
   if (row >= 0 && row < snapGrid.length && col >= 0 && col < snapGrid[0].length) {
@@ -236,6 +253,124 @@ export function findNearestSnapPoint(
 }
 
 /**
+ * Find the best snap position for a component to align with existing component terminals
+ */
+export function findTerminalSnapPosition(
+  componentType: ComponentType,
+  targetPoint: SnapPoint,
+  existingComponents: Map<string, PhysicalComponent>,
+  snapGrid: SnapPoint[][],
+  orientation: 0 | 90 | 180 | 270 = 0
+): SnapPoint | null {
+  const pattern = COMPONENT_PATTERNS[componentType];
+  const SNAP_THRESHOLD = GRID_CONFIG.CELL_SIZE * 0.5; // Half a cell
+  
+  // Get all terminal positions for the component
+  const componentTerminals = pattern.terminals;
+  
+  // Try each possible placement around the target point
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const testRow = targetPoint.row + dy;
+      const testCol = targetPoint.col + dx;
+      
+      if (testRow >= 0 && testRow < snapGrid.length && 
+          testCol >= 0 && testCol < snapGrid[0].length) {
+        
+        const testPoint = snapGrid[testRow][testCol];
+        
+        // Check if component can be placed here (allow terminal snapping)
+        if (canPlaceComponent(testPoint, pattern.width, pattern.height, snapGrid, true)) {
+          // Check if any terminals would align with existing component terminals
+          const { width, height } = getOrientedDimensions(pattern.width, pattern.height, orientation);
+          
+          for (const terminalPos of componentTerminals) {
+            const terminalSnapPoint = getTerminalSnapPoint(testPoint, terminalPos, width, height, snapGrid);
+            
+            if (terminalSnapPoint) {
+              // Check if this terminal aligns with any existing component terminal
+              for (const [_, existingComponent] of existingComponents) {
+                for (const terminal of existingComponent.terminals) {
+                  const distance = Math.sqrt(
+                    Math.pow(terminalSnapPoint.x - terminal.snapPoint.x, 2) +
+                    Math.pow(terminalSnapPoint.y - terminal.snapPoint.y, 2)
+                  );
+                  
+                  if (distance < SNAP_THRESHOLD) {
+                    return testPoint; // Found a snap position!
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return null; // No snap position found
+}
+
+/**
+ * Find the best snap position for a component to align with existing components
+ */
+export function findComponentSnapPosition(
+  componentType: ComponentType,
+  targetPoint: SnapPoint,
+  existingComponents: Map<string, PhysicalComponent>,
+  snapGrid: SnapPoint[][],
+  orientation: 0 | 90 | 180 | 270 = 0
+): SnapPoint | null {
+  const pattern = COMPONENT_PATTERNS[componentType];
+  const SNAP_THRESHOLD = GRID_CONFIG.CELL_SIZE * 0.5; // Half a cell
+  
+  // Get all terminal positions for the component
+  const componentTerminals = pattern.terminals;
+  
+  // Try each possible placement around the target point
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const testRow = targetPoint.row + dy;
+      const testCol = targetPoint.col + dx;
+      
+      if (testRow >= 0 && testRow < snapGrid.length && 
+          testCol >= 0 && testCol < snapGrid[0].length) {
+        
+        const testPoint = snapGrid[testRow][testCol];
+        
+        // Check if component can be placed here (allow terminal snapping)
+        if (canPlaceComponent(testPoint, pattern.width, pattern.height, snapGrid, true)) {
+          // Check if any terminals would align with existing component terminals
+          const { width, height } = getOrientedDimensions(pattern.width, pattern.height, orientation);
+          
+          for (const terminalPos of componentTerminals) {
+            const terminalSnapPoint = getTerminalSnapPoint(testPoint, terminalPos, width, height, snapGrid);
+            
+            if (terminalSnapPoint) {
+              // Check if this terminal aligns with any existing component terminal
+              for (const [_, existingComponent] of existingComponents) {
+                for (const terminal of existingComponent.terminals) {
+                  const distance = Math.sqrt(
+                    Math.pow(terminalSnapPoint.x - terminal.snapPoint.x, 2) +
+                    Math.pow(terminalSnapPoint.y - terminal.snapPoint.y, 2)
+                  );
+                  
+                  if (distance < SNAP_THRESHOLD) {
+                    return testPoint; // Found a snap position!
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return null; // No snap position found
+}
+
+/**
  * Update grid occupation status
  */
 export function updateGridOccupation(
@@ -259,5 +394,60 @@ export function updateGridOccupation(
   });
   
   return newGrid;
+}
+
+/**
+ * Find terminal snap position that allows overlapping
+ */
+export function findOverlapTerminalSnapPosition(
+  componentType: ComponentType,
+  targetPoint: SnapPoint,
+  existingComponents: Map<string, PhysicalComponent>,
+  snapGrid: SnapPoint[][],
+  orientation: 0 | 90 | 180 | 270 = 0
+): SnapPoint | null {
+  const pattern = COMPONENT_PATTERNS[componentType];
+  const SNAP_THRESHOLD = GRID_CONFIG.CELL_SIZE * 0.5; // Half a cell
+  
+  // Get all terminal positions for the component
+  const componentTerminals = pattern.terminals;
+  
+  // Try each possible placement around the target point
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const testRow = targetPoint.row + dy;
+      const testCol = targetPoint.col + dx;
+      
+      if (testRow >= 0 && testRow < snapGrid.length && 
+          testCol >= 0 && testCol < snapGrid[0].length) {
+        
+        const testPoint = snapGrid[testRow][testCol];
+        const { width, height } = getOrientedDimensions(pattern.width, pattern.height, orientation);
+        
+        // Check if any terminals would align with existing component terminals
+        for (const terminalPos of componentTerminals) {
+          const terminalSnapPoint = getTerminalSnapPoint(testPoint, terminalPos, width, height, snapGrid);
+          
+          if (terminalSnapPoint) {
+            // Check if this terminal aligns with any existing component terminal
+            for (const [_, existingComponent] of existingComponents) {
+              for (const terminal of existingComponent.terminals) {
+                const distance = Math.sqrt(
+                  Math.pow(terminalSnapPoint.x - terminal.snapPoint.x, 2) +
+                  Math.pow(terminalSnapPoint.y - terminal.snapPoint.y, 2)
+                );
+                
+                if (distance < SNAP_THRESHOLD) {
+                  return testPoint; // Found a snap position!
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return null; // No snap position found
 }
 

@@ -8,6 +8,7 @@ import { useSnapLogic } from '@/hooks/useSnapLogic';
 import { useActionTracking } from '@/hooks/useActionTracking';
 import { SnapPoint } from '@/types/component.types';
 import { GRID_CONFIG } from '@/config/components.config';
+import { findOverlapTerminalSnapPosition } from '@/utils/snap-logic';
 import { SnapPointGrid } from './SnapPointGrid';
 import { PhysicalComponent } from './PhysicalComponent';
 import { WireRenderer } from './WireRenderer';
@@ -61,8 +62,20 @@ export function SnapCircuitBoard() {
         return;
       }
       
+      // Try to find a snap position that aligns with existing component terminals
+      const snapPosition = findOverlapTerminalSnapPosition(
+        selectedComponent,
+        point,
+        components,
+        snapGrid,
+        0 // default orientation
+      );
+      
+      // Use snap position if found, otherwise use the clicked point
+      const finalPosition = snapPosition || point;
+      
       // Second terminal selected - place component
-      const component = placeComponent(selectedComponent, firstTerminal, point);
+      const component = placeComponent(selectedComponent, firstTerminal, finalPosition);
       
       // Track action
       if (component) {
@@ -177,8 +190,12 @@ export function SnapCircuitBoard() {
 
           {/* Placed components */}
           <div className="absolute inset-0" style={{ zIndex: 10 }}>
-            {componentsArray.map(component => (
-              <PhysicalComponent key={component.id} component={component} />
+            {componentsArray.map((component, index) => (
+              <PhysicalComponent 
+                key={component.id} 
+                component={component}
+                zIndex={10 + index} // Later components appear on top
+              />
             ))}
           </div>
         </div>
