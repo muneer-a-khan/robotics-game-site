@@ -59,11 +59,9 @@ export function SnapCircuitBoard() {
         console.log('Starting overlap mode with component:', clickedComponent.id);
         setOverlapSourceComponent(clickedComponent);
         setFirstTerminal(point);
-        // Don't set isOverlapMode here - it's already true
+        setIsOverlapMode(true);
       } else if (overlapSourceComponent && firstTerminal) {
         // Second click - place component with overlap
-        // One connection point will be on the overlap point (firstTerminal)
-        // The other connection point will be on the new point
         console.log('Placing component with overlap from', overlapSourceComponent.id, 'to', point.id);
         const component = placeComponent(selectedComponent || 'wire', firstTerminal, point);
         
@@ -130,8 +128,8 @@ export function SnapCircuitBoard() {
         <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
           <p className="text-sm text-orange-800">
             {overlapSourceComponent && firstTerminal
-              ? `Now click any point to place a component. One connection point will be on the overlap point, the other on your selected point.`
-              : `Click on a connection point (white circle) of an existing component to start overlap mode`
+              ? `Now click any point to place a component that will overlap with ${overlapSourceComponent.type}`
+              : `Click on a connection point of an existing component to start overlap mode`
             }
           </p>
           <p className="text-xs text-orange-600 mt-1">

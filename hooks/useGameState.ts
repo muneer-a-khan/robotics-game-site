@@ -24,27 +24,29 @@ export function useGameState() {
   ) => {
     const componentId = `${componentType}-${Date.now()}`;
     
-    // Calculate component position so connection points align with clicked snap points
-    const componentPattern = COMPONENT_PATTERNS[componentType];
-    
-    // Calculate the distance between terminals
-    const terminalDistance = Math.sqrt(
-      Math.pow(terminal2.x - terminal1.x, 2) + Math.pow(terminal2.y - terminal1.y, 2)
-    );
-    
-    // Calculate component dimensions based on terminal distance and component pattern
-    const componentWidth = Math.max(terminalDistance, GRID_CONFIG.CELL_SIZE * componentPattern.width);
-    const componentHeight = Math.max(GRID_CONFIG.CELL_SIZE * componentPattern.height, GRID_CONFIG.CELL_SIZE * 0.5);
-    
-    // Calculate the component's center position
+    // Calculate component position to be centered on the line between terminals
     const centerX = (terminal1.x + terminal2.x) / 2;
     const centerY = (terminal1.y + terminal2.y) / 2;
     
-    // Calculate the component's top-left position
-    const componentX = centerX - componentWidth / 2;
-    const componentY = centerY - componentHeight / 2;
+    // Create a virtual anchor point at the center
+    const anchorPoint: SnapPoint = {
+      id: `center-${componentId}`,
+      row: Math.round(centerY / GRID_CONFIG.CELL_SIZE),
+      col: Math.round(centerX / GRID_CONFIG.CELL_SIZE),
+      x: centerX,
+      y: centerY,
+      occupied: false,
+    };
     
-    // Create component with connection-point-based positioning
+    // Get occupied snap points (but we'll override the positioning)
+    const snapPoints = getOccupiedSnapPoints(
+      anchorPoint,
+      componentType,
+      state.snapGrid,
+      orientation
+    );
+    
+    // Create component with custom positioning
     const component: PhysicalComponent = {
       id: componentId,
       type: componentType,
@@ -69,12 +71,12 @@ export function useGameState() {
       orientation,
       isLocked: componentType === 'battery_holder',
       image: COMPONENT_PATTERNS[componentType].image,
-      // Position component so its connection points align with the clicked snap points
+      // Custom positioning for line placement
       customPosition: {
-        x: componentX,
-        y: componentY,
-        width: componentWidth,
-        height: componentHeight,
+        x: centerX,
+        y: centerY,
+        width: Math.abs(terminal2.x - terminal1.x) + GRID_CONFIG.CELL_SIZE,
+        height: Math.abs(terminal2.y - terminal1.y) + GRID_CONFIG.CELL_SIZE,
       }
     };
     
