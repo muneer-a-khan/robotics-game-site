@@ -9,13 +9,13 @@ interface SnapPointGridProps {
   points: SnapPoint[][];
   highlighted: string[];
   firstTerminal?: SnapPoint | null;
-  isOverlapMode?: boolean;
+  isDeleteMode?: boolean;
   onPointClick: (point: SnapPoint) => void;
 }
 
-export function SnapPointGrid({ points, highlighted, firstTerminal, isOverlapMode = false, onPointClick }: SnapPointGridProps) {
+export function SnapPointGrid({ points, highlighted, firstTerminal, isDeleteMode = false, onPointClick }: SnapPointGridProps) {
   const allPoints = points.flat();
-  console.log('Rendering SnapPointGrid:', allPoints.length, 'points, highlighted:', highlighted.length, 'isOverlapMode:', isOverlapMode);
+  console.log('Rendering SnapPointGrid:', allPoints.length, 'points, highlighted:', highlighted.length, 'isDeleteMode:', isDeleteMode);
   
   return (
     <div className="absolute inset-0">
@@ -26,7 +26,7 @@ export function SnapPointGrid({ points, highlighted, firstTerminal, isOverlapMod
           isHighlighted={highlighted.includes(point.id)}
           isFirstTerminal={firstTerminal?.id === point.id}
           isOccupied={point.occupied}
-          isOverlapMode={isOverlapMode}
+          isDeleteMode={isDeleteMode}
           onClick={() => onPointClick(point)}
         />
       ))}
@@ -39,15 +39,15 @@ interface SnapPointKnobProps {
   isHighlighted: boolean;
   isFirstTerminal: boolean;
   isOccupied: boolean;
-  isOverlapMode: boolean;
+  isDeleteMode: boolean;
   onClick: () => void;
 }
 
-function SnapPointKnob({ point, isHighlighted, isFirstTerminal, isOccupied, isOverlapMode, onClick }: SnapPointKnobProps) {
+function SnapPointKnob({ point, isHighlighted, isFirstTerminal, isOccupied, isDeleteMode, onClick }: SnapPointKnobProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('SnapPointKnob clicked:', point.id, 'row:', point.row, 'col:', point.col, 'isOccupied:', isOccupied, 'isOverlapMode:', isOverlapMode);
+    console.log('SnapPointKnob clicked:', point.id, 'row:', point.row, 'col:', point.col, 'isOccupied:', isOccupied, 'isDeleteMode:', isDeleteMode);
     onClick();
   };
 
@@ -57,16 +57,16 @@ function SnapPointKnob({ point, isHighlighted, isFirstTerminal, isOccupied, isOv
       return "ring-4 ring-blue-500 scale-125 bg-gradient-to-br from-blue-300 to-blue-500";
     }
     
-    if (isOverlapMode) {
+    if (isDeleteMode) {
       if (isOccupied) {
-        return "bg-gradient-to-br from-orange-300 to-orange-500 hover:from-orange-400 hover:to-orange-600"; // Orange for occupied (overlap)
+        return "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600"; // Red for occupied (can be deleted)
       } else {
-        return "bg-gradient-to-br from-green-300 to-green-500 hover:from-green-400 hover:to-green-600"; // Green for empty (normal)
+        return "bg-gradient-to-br from-gray-300 to-gray-500 hover:from-gray-400 hover:to-gray-600"; // Gray for empty (cannot be deleted)
       }
     }
     
     // Normal mode
-    return "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600"; // Red for normal
+    return "bg-gradient-to-br from-blue-300 to-blue-500 hover:from-blue-400 hover:to-blue-600"; // Blue for normal
   };
 
   return (
@@ -78,7 +78,7 @@ function SnapPointKnob({ point, isHighlighted, isFirstTerminal, isOccupied, isOv
         "border-2 border-white",
         getColorClasses(),
         isHighlighted && !isFirstTerminal && "ring-4 ring-green-400 scale-125 hover:scale-150",
-        isOccupied && !isOverlapMode && "opacity-50" // Only make semi-transparent in normal mode
+        isOccupied && !isDeleteMode && "opacity-50" // Only make semi-transparent in normal mode
       )}
       style={{
         left: point.x - 16,

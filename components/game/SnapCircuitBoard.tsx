@@ -23,6 +23,7 @@ export function SnapCircuitBoard() {
     sessionId,
     placeComponent,
     placeMusicCircuit,
+    removeComponent,
     highlightSnapPoints,
   } = useGameState();
   
@@ -31,8 +32,7 @@ export function SnapCircuitBoard() {
   
   // State for two-terminal clicking
   const [firstTerminal, setFirstTerminal] = useState<SnapPoint | null>(null);
-  const [isOverlapMode, setIsOverlapMode] = useState(false);
-  const [overlapSourceComponent, setOverlapSourceComponent] = useState<PhysicalComponent | null>(null);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
   
   // State for 5-point selection (music circuits)
   const [selectedTerminals, setSelectedTerminals] = useState<SnapPoint[]>([]);
@@ -46,45 +46,52 @@ export function SnapCircuitBoard() {
     }
   }, [selectedComponent]);
   
+  // Reset delete mode when component is selected
+  useEffect(() => {
+    if (selectedComponent) {
+      setIsDeleteMode(false);
+    }
+  }, [selectedComponent]);
+  
   const handleSnapPointClick = (point: SnapPoint) => {
-    console.log('SnapPoint clicked:', point.id, 'selectedComponent:', selectedComponent, 'firstTerminal:', firstTerminal?.id, 'isOverlapMode:', isOverlapMode);
+    console.log('SnapPoint clicked:', point.id, 'selectedComponent:', selectedComponent, 'firstTerminal:', firstTerminal?.id, 'isDeleteMode:', isDeleteMode);
     
-    if (!selectedComponent && !isOverlapMode) {
-      console.log('No component selected and not in overlap mode, ignoring click');
+    if (!selectedComponent && !isDeleteMode) {
+      console.log('No component selected and not in delete mode, ignoring click');
       return;
     }
 
-    if (isOverlapMode) {
-      // In overlap mode - check if this is a connection point of an existing component
-      const clickedComponent = componentsArray.find(comp => 
+    if (isDeleteMode) {
+      // In delete mode - find all components that share this connection point
+      const overlappingComponents = componentsArray.filter(comp => 
         comp.terminals.some(terminal => terminal.snapPoint.id === point.id)
       );
       
-      if (clickedComponent && !overlapSourceComponent) {
-        // First click on a component's connection point - enter overlap mode
-        console.log('Starting overlap mode with component:', clickedComponent.id);
-        setOverlapSourceComponent(clickedComponent);
-        setFirstTerminal(point);
-        setIsOverlapMode(true);
-      } else if (overlapSourceComponent && firstTerminal) {
-        // Second click - place component with overlap
-        console.log('Placing component with overlap from', overlapSourceComponent.id, 'to', point.id);
-        const component = placeComponent(selectedComponent || 'wire', firstTerminal, point);
+      if (overlappingComponents.length > 0) {
+        // Find the topmost component (most recently placed)
+        // Components are rendered in order, so the last one in the array is on top
+        const topmostComponent = overlappingComponents[overlappingComponents.length - 1];
         
-        if (component) {
+        // Allow deletion of all components including battery holder
+        
+        // Show confirmation with component count if multiple components overlap
+        const confirmMessage = overlappingComponents.length > 1 
+          ? `Delete ${topmostComponent.type} component? (${overlappingComponents.length} components overlap at this point - deleting the topmost one)`
+          : `Delete ${topmostComponent.type} component?`;
+          
+        if (confirm(confirmMessage)) {
+          console.log('Deleting topmost component:', topmostComponent.id, 'out of', overlappingComponents.length, 'overlapping components');
+          removeComponent(topmostComponent.id);
+          
+          // Track action
           trackAction({
-            actionType: 'place',
-            componentType: component.type,
-            componentId: component.id,
-            snapPointIds: component.snapPoints.map(p => p.id),
-            orientation: component.orientation,
+            actionType: 'remove',
+            componentType: topmostComponent.type,
+            componentId: topmostComponent.id,
+            snapPointIds: topmostComponent.snapPoints.map(p => p.id),
+            orientation: topmostComponent.orientation,
           });
         }
-        
-        // Reset overlap mode
-        setFirstTerminal(null);
-        setIsOverlapMode(false);
-        setOverlapSourceComponent(null);
       }
     } else if (selectedComponent) {
       // Normal placement mode
@@ -153,7 +160,7 @@ export function SnapCircuitBoard() {
   return (
     <div className="relative">
       {/* Instructions */}
-      {selectedComponent && !isOverlapMode && (
+      {selectedComponent && !isDeleteMode && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             {isMusicCircuit ? (
@@ -169,35 +176,29 @@ export function SnapCircuitBoard() {
         </div>
       )}
       
-      {isOverlapMode && (
-        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-          <p className="text-sm text-orange-800">
-            {overlapSourceComponent && firstTerminal
-              ? `Now click any point to place a component that will overlap with ${overlapSourceComponent.type}`
-              : `Click on a connection point of an existing component to start overlap mode`
-            }
-          </p>
-          <p className="text-xs text-orange-600 mt-1">
-            Orange points = will cause overlap, Green points = normal placement
+      {isDeleteMode && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">
+            Click on any connection point of a component to delete it.
           </p>
         </div>
       )}
       
-      {/* Overlap Mode Toggle */}
+      {/* Delete Mode Toggle */}
       <div className="mb-4">
         <button
           onClick={() => {
-            setIsOverlapMode(!isOverlapMode);
+            setIsDeleteMode(!isDeleteMode);
             setFirstTerminal(null);
-            setOverlapSourceComponent(null);
+            setSelectedTerminals([]);
           }}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            isOverlapMode
-              ? 'bg-orange-600 hover:bg-orange-700 text-white'
+            isDeleteMode
+              ? 'bg-red-600 hover:bg-red-700 text-white'
               : 'bg-gray-600 hover:bg-gray-700 text-white'
           }`}
         >
-          {isOverlapMode ? '🔄 Overlap Mode ON' : '🔗 Enable Overlap Mode'}
+          {isDeleteMode ? '🗑️ Delete Mode ON' : '🗑️ Enable Delete Mode'}
         </button>
       </div>
       
@@ -275,7 +276,7 @@ export function SnapCircuitBoard() {
               points={snapGrid}
               highlighted={[]} // No highlighting - all points are always clickable
               firstTerminal={firstTerminal}
-              isOverlapMode={isOverlapMode}
+              isDeleteMode={isDeleteMode}
               onPointClick={handleSnapPointClick}
             />
           </div>
