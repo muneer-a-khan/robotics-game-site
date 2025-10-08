@@ -45,6 +45,41 @@ export interface ValidationResult {
   errors: string[];
 }
 
+// Circuit Graph Structure for LLM Validation
+export interface CircuitNode {
+  id: string;
+  type: ComponentType;
+  position: {
+    x: number; // Grid position
+    y: number; // Grid position
+  };
+  orientation: 0 | 90 | 180 | 270;
+  terminals: {
+    id: string;
+    position: string; // 'left', 'right', 'top-left', etc.
+    gridPosition: { x: number; y: number };
+  }[];
+}
+
+export interface CircuitEdge {
+  id: string;
+  fromNodeId: string;
+  toNodeId: string;
+  fromTerminalId: string;
+  toTerminalId: string;
+}
+
+export interface CircuitGraph {
+  nodes: CircuitNode[];
+  edges: CircuitEdge[];
+  metadata: {
+    circuitNumber: number;
+    difficulty: Difficulty;
+    timestamp: number;
+    sessionId: string;
+  };
+}
+
 export interface Circuit {
   id: number;
   circuitNumber: number;

@@ -100,7 +100,8 @@ function GameContent() {
       const validation = validateCircuit(
         userComponents,
         connections,
-        targetCircuit
+        targetCircuit,
+        sessionId
       );
       
       // Complete session
