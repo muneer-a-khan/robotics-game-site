@@ -441,6 +441,7 @@ export function useGameState() {
     stopTimer,
     setValidationErrors,
     resetGame,
+    dispatch,
   };
 }
 

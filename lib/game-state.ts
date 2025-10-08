@@ -163,6 +163,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
+    case 'NEXT_CIRCUIT': {
+      return {
+        ...state,
+        currentCircuit: action.payload.circuitNumber,
+        isPlaying: false,
+        timeRemaining: 180,
+        components: new Map(),
+        connections: [],
+        selectedComponent: null,
+        highlightedSnapPoints: [],
+        validationErrors: [],
+        startTime: null,
+      };
+    }
+
     case 'RESET_GAME': {
       return getInitialGameState();
     }

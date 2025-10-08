@@ -182,6 +182,121 @@ async function main() {
     ],
   };
 
+  // Circuit 3 - Easy: Build a circuit with lamp and photoresistor
+  const circuit3Easy = {
+    circuitNumber: 3,
+    difficulty: 'easy',
+    description: 'Build a circuit with lamp and photoresistor',
+    targetComponents: [
+      {
+        id: 'battery-1',
+        type: 'battery_holder',
+        gridPosition: { x: 0, y: 1 },
+        orientation: 90,
+        connectionPoints: [
+          { id: 'battery-1-cp-0', position: 'top-right' },
+          { id: 'battery-1-cp-1', position: 'bottom-right' }
+        ],
+      },
+      {
+        id: 'lamp-1',
+        type: 'lamp',
+        gridPosition: { x: 4, y: 0 },
+        orientation: 0,
+        connectionPoints: [
+          { id: 'lamp-1-cp-0', position: 'left' },
+          { id: 'lamp-1-cp-1', position: 'right' }
+        ],
+      },
+      {
+        id: 'photoresistor-1',
+        type: 'photoresistor',
+        gridPosition: { x: 4, y: 3 },
+        orientation: 0,
+        connectionPoints: [
+          { id: 'photoresistor-1-cp-0', position: 'left' },
+          { id: 'photoresistor-1-cp-1', position: 'right' }
+        ],
+      },
+    ],
+    targetConnections: [
+      {
+        id: 'wire-1',
+        fromConnectionPointId: 'battery-1-cp-0',
+        toConnectionPointId: 'lamp-1-cp-0',
+      },
+      {
+        id: 'wire-2',
+        fromConnectionPointId: 'lamp-1-cp-1',
+        toConnectionPointId: 'photoresistor-1-cp-0',
+      },
+      {
+        id: 'wire-3',
+        fromConnectionPointId: 'photoresistor-1-cp-1',
+        toConnectionPointId: 'battery-1-cp-1',
+      },
+    ],
+  };
+
+  // Circuit 3 - Hard: Build a complex circuit with alarm and whistle
+  const circuit3Hard = {
+    circuitNumber: 3,
+    difficulty: 'hard',
+    description: 'Build a complex circuit with alarm and whistle',
+    targetComponents: [
+      {
+        id: 'battery-1',
+        type: 'battery_holder',
+        gridPosition: { x: 0, y: 1 },
+        orientation: 90,
+        connectionPoints: [
+          { id: 'battery-1-cp-0', position: 'top-right' },
+          { id: 'battery-1-cp-1', position: 'bottom-right' }
+        ],
+      },
+      {
+        id: 'alarm-1',
+        type: 'alarm_ic',
+        gridPosition: { x: 4, y: 0 },
+        orientation: 0,
+        connectionPoints: [
+          { id: 'alarm-1-cp-0', position: 'top-left' },
+          { id: 'alarm-1-cp-1', position: 'top-right' },
+          { id: 'alarm-1-cp-2', position: 'bottom-left' },
+          { id: 'alarm-1-cp-3', position: 'bottom-right' },
+          { id: 'alarm-1-cp-4', position: 'middle-right' }
+        ],
+      },
+      {
+        id: 'whistle-1',
+        type: 'whistle_chip',
+        gridPosition: { x: 4, y: 3 },
+        orientation: 0,
+        connectionPoints: [
+          { id: 'whistle-1-cp-0', position: 'left' },
+          { id: 'whistle-1-cp-1', position: 'right' }
+        ],
+      },
+    ],
+    targetConnections: [
+      {
+        id: 'wire-1',
+        fromConnectionPointId: 'battery-1-cp-0',
+        toConnectionPointId: 'alarm-1-cp-0',
+      },
+      {
+        id: 'wire-2',
+        fromConnectionPointId: 'alarm-1-cp-4',
+        toConnectionPointId: 'whistle-1-cp-0',
+      },
+      {
+        id: 'wire-3',
+        fromConnectionPointId: 'whistle-1-cp-1',
+        toConnectionPointId: 'battery-1-cp-1',
+      },
+    ],
+  };
+
   // Insert or update circuits
   try {
     await prisma.circuit.upsert({
@@ -249,6 +364,50 @@ async function main() {
       },
     });
     console.log('✅ Circuit 2 (Hard) created');
+
+    await prisma.circuit.upsert({
+      where: {
+        circuitNumber_difficulty: {
+          circuitNumber: 3,
+          difficulty: 'easy',
+        },
+      },
+      update: {
+        description: circuit3Easy.description,
+        targetComponents: circuit3Easy.targetComponents as any,
+        targetConnections: circuit3Easy.targetConnections as any,
+      },
+      create: {
+        circuitNumber: 3,
+        difficulty: 'easy',
+        description: circuit3Easy.description,
+        targetComponents: circuit3Easy.targetComponents as any,
+        targetConnections: circuit3Easy.targetConnections as any,
+      },
+    });
+    console.log('✅ Circuit 3 (Easy) created');
+
+    await prisma.circuit.upsert({
+      where: {
+        circuitNumber_difficulty: {
+          circuitNumber: 3,
+          difficulty: 'hard',
+        },
+      },
+      update: {
+        description: circuit3Hard.description,
+        targetComponents: circuit3Hard.targetComponents as any,
+        targetConnections: circuit3Hard.targetConnections as any,
+      },
+      create: {
+        circuitNumber: 3,
+        difficulty: 'hard',
+        description: circuit3Hard.description,
+        targetComponents: circuit3Hard.targetComponents as any,
+        targetConnections: circuit3Hard.targetConnections as any,
+      },
+    });
+    console.log('✅ Circuit 3 (Hard) created');
 
     console.log('\n🎉 Successfully seeded all circuit challenges!');
   } catch (error) {

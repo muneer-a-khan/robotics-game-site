@@ -28,6 +28,7 @@ function GameContent() {
     startGame,
     stopTimer,
     setValidationErrors,
+    dispatch,
   } = useGameState();
   
   const [showDifficultySelector, setShowDifficultySelector] = useState(true);
@@ -37,13 +38,17 @@ function GameContent() {
     if (!isPlaying || timeRemaining <= 0) return;
     
     const timer = setInterval(() => {
-      const newTime = timeRemaining - 1;
-      if (newTime <= 0) {
-        handleCircuitComplete();
-      }
+      dispatch({ type: 'TICK_TIMER' });
     }, 1000);
     
     return () => clearInterval(timer);
+  }, [isPlaying, timeRemaining, dispatch]);
+
+  // Handle timer expiration
+  useEffect(() => {
+    if (isPlaying && timeRemaining === 0) {
+      handleCircuitComplete();
+    }
   }, [isPlaying, timeRemaining]);
   
   const handleDifficultySelect = async (selectedDifficulty: Difficulty) => {
@@ -110,12 +115,16 @@ function GameContent() {
         }),
       });
       
-      // Show results
+      // Show results and handle progression
       if (validation.isValid) {
         alert('🎉 Circuit correct! Well done!');
         
         if (currentCircuit < 3) {
-          // Move to next circuit
+          // Move to next circuit - increment circuit number and show difficulty selector
+          dispatch({ 
+            type: 'NEXT_CIRCUIT',
+            payload: { circuitNumber: currentCircuit + 1 }
+          });
           setShowDifficultySelector(true);
           setValidationErrors([]);
         } else {
@@ -125,6 +134,9 @@ function GameContent() {
       } else {
         alert(`Circuit incorrect!\n\nErrors:\n${validation.errors.join('\n')}`);
         setValidationErrors(validation.errors);
+        
+        // For incorrect circuits, also return to difficulty selector
+        setShowDifficultySelector(true);
       }
       
     } catch (error) {

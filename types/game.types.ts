@@ -37,6 +37,7 @@ export type GameAction =
   | { type: 'SET_VALIDATION_ERRORS'; payload: string[] }
   | { type: 'TICK_TIMER' }
   | { type: 'STOP_TIMER' }
+  | { type: 'NEXT_CIRCUIT'; payload: { circuitNumber: number } }
   | { type: 'RESET_GAME' };
 
 export interface ValidationResult {
