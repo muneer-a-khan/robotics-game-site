@@ -28,6 +28,7 @@ export function initializeSnapGrid(): SnapPoint[][] {
 
 /**
  * Get valid snap points for placing a component
+ * NO VALIDATION - all grid intersections are clickable
  */
 export function getValidSnapPoints(
   componentType: ComponentType,
@@ -35,21 +36,12 @@ export function getValidSnapPoints(
   existingComponents: Map<string, PhysicalComponent>,
   orientation: 0 | 90 | 180 | 270 = 0
 ): SnapPoint[] {
-  const pattern = COMPONENT_PATTERNS[componentType];
+  // Return ALL snap points - no validation
   const validPoints: SnapPoint[] = [];
   
-  // Get actual dimensions based on orientation
-  const { width, height } = getOrientedDimensions(pattern.width, pattern.height, orientation);
-  
-  // Iterate through all snap points
   for (let row = 0; row < snapGrid.length; row++) {
     for (let col = 0; col < snapGrid[row].length; col++) {
-      const anchorPoint = snapGrid[row][col];
-      
-      // Check if component fits starting from this point
-      if (canPlaceComponent(anchorPoint, width, height, snapGrid)) {
-        validPoints.push(anchorPoint);
-      }
+      validPoints.push(snapGrid[row][col]);
     }
   }
   
@@ -385,7 +377,8 @@ export function updateGridOccupation(
   // Mark occupied points
   components.forEach(component => {
     component.snapPoints.forEach(point => {
-      if (point.row >= 0 && point.row < newGrid.length && 
+      if (point && typeof point.row === 'number' && typeof point.col === 'number' &&
+          point.row >= 0 && point.row < newGrid.length && 
           point.col >= 0 && point.col < newGrid[0].length) {
         newGrid[point.row][point.col].occupied = true;
         (newGrid[point.row][point.col] as any).componentId = component.id;

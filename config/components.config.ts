@@ -6,10 +6,10 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
   battery_holder: {
     type: 'battery_holder',
     displayName: 'Battery Holder',
-    width: 3,
-    height: 3,
-    terminals: ['top-right', 'bottom-right'],
-    canRotate: false,
+    width: 2,  // 2 columns wide
+    height: 2, // 2 rows high
+    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], // Connection points on each corner
+    canRotate: true,
     maxCount: 1,
     image: '/photos/components/battery_holder.png',
     color: '#DC2626'
@@ -160,6 +160,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
 };
 
 export const AVAILABLE_COMPONENTS: ComponentType[] = [
+  'battery_holder',
   'wire',
   'led_yellow',
   'led_red',
@@ -179,7 +180,7 @@ export const AVAILABLE_COMPONENTS: ComponentType[] = [
 export const GRID_CONFIG = {
   ROWS: 5,      // A-E (up and down)
   COLS: 7,      // 1-7 (side by side)
-  CELL_SIZE: 80, // pixels between snap points
+  CELL_SIZE: 120, // pixels between snap points (increased for bigger board)
   ROW_LABELS: ['A', 'B', 'C', 'D', 'E'],
   COL_LABELS: ['1', '2', '3', '4', '5', '6', '7']
 };

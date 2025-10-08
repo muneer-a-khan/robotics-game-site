@@ -30,66 +30,83 @@ export function SnapCircuitBoard() {
   
   // State for two-terminal clicking
   const [firstTerminal, setFirstTerminal] = useState<SnapPoint | null>(null);
+  const [isOverlapMode, setIsOverlapMode] = useState(false);
+  const [overlapSourceComponent, setOverlapSourceComponent] = useState<PhysicalComponent | null>(null);
   
-  // Update highlighted snap points when component is selected
+  // Reset terminal selection when no component is selected
   useEffect(() => {
-    if (selectedComponent) {
-      // Show all snap points (no validation)
-      const allIds = snapGrid.flat().map(point => point.id);
-      highlightSnapPoints(allIds);
-    } else {
-      highlightSnapPoints([]);
-      setFirstTerminal(null); // Reset terminal selection
+    if (!selectedComponent) {
+      setFirstTerminal(null);
     }
-  }, [selectedComponent, snapGrid, highlightSnapPoints]);
+  }, [selectedComponent]);
   
   const handleSnapPointClick = (point: SnapPoint) => {
-    if (!selectedComponent) {
+    console.log('SnapPoint clicked:', point.id, 'selectedComponent:', selectedComponent, 'firstTerminal:', firstTerminal?.id, 'isOverlapMode:', isOverlapMode);
+    
+    if (!selectedComponent && !isOverlapMode) {
+      console.log('No component selected and not in overlap mode, ignoring click');
       return;
     }
-    
-    if (!firstTerminal) {
-      // First terminal selected
-      setFirstTerminal(point);
-    } else {
-      // Check if terminals are adjacent (not allowed)
-      const isAdjacent = Math.abs(firstTerminal.row - point.row) <= 1 && 
-                        Math.abs(firstTerminal.col - point.col) <= 1;
-      
-      if (isAdjacent) {
-        // Reset selection if terminals are too close
-        setFirstTerminal(null);
-        return;
-      }
-      
-      // Try to find a snap position that aligns with existing component terminals
-      const snapPosition = findOverlapTerminalSnapPosition(
-        selectedComponent,
-        point,
-        components,
-        snapGrid,
-        0 // default orientation
+
+    if (isOverlapMode) {
+      // In overlap mode - check if this is a connection point of an existing component
+      const clickedComponent = componentsArray.find(comp => 
+        comp.terminals.some(terminal => terminal.snapPoint.id === point.id)
       );
       
-      // Use snap position if found, otherwise use the clicked point
-      const finalPosition = snapPosition || point;
-      
-      // Second terminal selected - place component
-      const component = placeComponent(selectedComponent, firstTerminal, finalPosition);
-      
-      // Track action
-      if (component) {
-        trackAction({
-          actionType: 'place',
-          componentType: component.type,
-          componentId: component.id,
-          snapPointIds: component.snapPoints.map(p => p.id),
-          orientation: component.orientation,
-        });
+      if (clickedComponent && !overlapSourceComponent) {
+        // First click on a component's connection point - enter overlap mode
+        console.log('Starting overlap mode with component:', clickedComponent.id);
+        setOverlapSourceComponent(clickedComponent);
+        setFirstTerminal(point);
+        // Don't set isOverlapMode here - it's already true
+      } else if (overlapSourceComponent && firstTerminal) {
+        // Second click - place component with overlap
+        // One connection point will be on the overlap point (firstTerminal)
+        // The other connection point will be on the new point
+        console.log('Placing component with overlap from', overlapSourceComponent.id, 'to', point.id);
+        const component = placeComponent(selectedComponent || 'wire', firstTerminal, point);
+        
+        if (component) {
+          trackAction({
+            actionType: 'place',
+            componentType: component.type,
+            componentId: component.id,
+            snapPointIds: component.snapPoints.map(p => p.id),
+            orientation: component.orientation,
+          });
+        }
+        
+        // Reset overlap mode
+        setFirstTerminal(null);
+        setIsOverlapMode(false);
+        setOverlapSourceComponent(null);
       }
-      
-      // Reset selection
-      setFirstTerminal(null);
+    } else if (selectedComponent) {
+      // Normal placement mode
+      if (!firstTerminal) {
+        // First terminal selected
+        console.log('Setting first terminal:', point.id);
+        setFirstTerminal(point);
+      } else {
+        // Second terminal selected - place component
+        console.log('Placing component with terminals:', firstTerminal.id, 'and', point.id);
+        const component = placeComponent(selectedComponent, firstTerminal, point);
+
+        // Track action
+        if (component) {
+          trackAction({
+            actionType: 'place',
+            componentType: component.type,
+            componentId: component.id,
+            snapPointIds: component.snapPoints.map(p => p.id),
+            orientation: component.orientation,
+          });
+        }
+
+        // Reset selection
+        setFirstTerminal(null);
+      }
     }
   };
   
@@ -98,16 +115,48 @@ export function SnapCircuitBoard() {
   return (
     <div className="relative">
       {/* Instructions */}
-      {selectedComponent && (
+      {selectedComponent && !isOverlapMode && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            {firstTerminal 
-              ? `Now click the second terminal for your ${selectedComponent} component (must be at least 2 grid spaces away)`
+            {firstTerminal
+              ? `Now click the second terminal for your ${selectedComponent} component`
               : `Click the first terminal for your ${selectedComponent} component`
             }
           </p>
         </div>
       )}
+      
+      {isOverlapMode && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <p className="text-sm text-orange-800">
+            {overlapSourceComponent && firstTerminal
+              ? `Now click any point to place a component. One connection point will be on the overlap point, the other on your selected point.`
+              : `Click on a connection point (white circle) of an existing component to start overlap mode`
+            }
+          </p>
+          <p className="text-xs text-orange-600 mt-1">
+            Orange points = will cause overlap, Green points = normal placement
+          </p>
+        </div>
+      )}
+      
+      {/* Overlap Mode Toggle */}
+      <div className="mb-4">
+        <button
+          onClick={() => {
+            setIsOverlapMode(!isOverlapMode);
+            setFirstTerminal(null);
+            setOverlapSourceComponent(null);
+          }}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            isOverlapMode
+              ? 'bg-orange-600 hover:bg-orange-700 text-white'
+              : 'bg-gray-600 hover:bg-gray-700 text-white'
+          }`}
+        >
+          {isOverlapMode ? '🔄 Overlap Mode ON' : '🔗 Enable Overlap Mode'}
+        </button>
+      </div>
       
       {/* Column labels (1-10) */}
       <div className="flex justify-start mb-2 ml-8">
@@ -178,12 +227,15 @@ export function SnapCircuitBoard() {
           </svg>
 
           {/* Snap point grid */}
-          <SnapPointGrid
-            points={snapGrid}
-            highlighted={highlightedSnapPoints}
-            firstTerminal={firstTerminal}
-            onPointClick={handleSnapPointClick}
-          />
+          <div className="absolute inset-0" style={{ zIndex: 20 }}>
+            <SnapPointGrid
+              points={snapGrid}
+              highlighted={[]} // No highlighting - all points are always clickable
+              firstTerminal={firstTerminal}
+              isOverlapMode={isOverlapMode}
+              onPointClick={handleSnapPointClick}
+            />
+          </div>
 
           {/* Wire connections */}
           <WireRenderer connections={connections} components={components} />

@@ -65,12 +65,6 @@ function GameContent() {
       startGame(session.id, selectedDifficulty, currentCircuit);
       setShowDifficultySelector(false);
       
-      // Place battery holder at middle left position (0, 2) - Row C, Column 1
-      // Battery is 3x3, so it spans rows 1-3 (B-D) and columns 0-2 (1-3)
-      const batterySnapPoint1 = snapGrid[2][0]; // Row C (index 2), Column 1 (index 0) - top-right connection
-      const batterySnapPoint2 = snapGrid[2][0]; // Same point for now, will be updated in snap logic
-      placeComponent('battery_holder', batterySnapPoint1, batterySnapPoint2, 90); // Rotate 90 degrees right
-      
     } catch (error) {
       console.error('Error starting game:', error);
       alert('Failed to start game. Please try again.');
@@ -148,7 +142,7 @@ function GameContent() {
         />
       )}
       
-      <div className="max-w-[1600px] mx-auto space-y-4">
+      <div className="max-w-[2000px] mx-auto space-y-4">
         <GameHeader
           circuitNumber={currentCircuit}
           difficulty={difficulty}
@@ -156,12 +150,14 @@ function GameContent() {
           onDone={handleCircuitComplete}
         />
         
-        <div className="flex gap-4">
+        <div className="flex gap-6">
           <div className="flex-1 flex justify-center">
             <SnapCircuitBoard />
           </div>
           
-          <ComponentToolbox />
+          <div className="w-80">
+            <ComponentToolbox />
+          </div>
         </div>
       </div>
     </div>

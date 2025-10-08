@@ -1,19 +1,27 @@
 // Game State Management with Reducer
 
 import { GameState, GameAction } from '@/types/game.types';
+import { PhysicalComponent, SnapPoint } from '@/types/component.types';
 import { initializeSnapGrid, updateGridOccupation } from '@/utils/snap-logic';
 import { detectConnections } from '@/utils/connection-validator';
+import { GRID_CONFIG } from '@/config/components.config';
+
 
 /**
  * Initial game state
  */
 export function getInitialGameState(): GameState {
+  const snapGrid = initializeSnapGrid();
+  const components = new Map();
+  
+  // No automatic battery placement - user will place it manually
+  
   return {
     sessionId: null,
     currentCircuit: 1,
     difficulty: 'easy',
-    snapGrid: initializeSnapGrid(),
-    components: new Map(),
+    snapGrid,
+    components,
     connections: [],
     selectedComponent: null,
     highlightedSnapPoints: [],
