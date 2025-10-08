@@ -9,7 +9,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     width: 2,  // 2 columns wide
     height: 2, // 2 rows high
     terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], // Connection points on each corner
-    canRotate: true,
+    canRotate: false,
     maxCount: 1,
     image: '/photos/components/battery_holder.png',
     color: '#DC2626'
@@ -83,9 +83,9 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
   music_ic: {
     type: 'music_ic',
     displayName: 'U1 Music',
-    width: 3,
+    width: 2,
     height: 2,
-    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-right'],
+    terminals: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-right'],
     canRotate: true,
     maxCount: 2,
     image: '/photos/components/U1_Music.png',
@@ -94,9 +94,9 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
   alarm_ic: {
     type: 'alarm_ic',
     displayName: 'U2 Alarm',
-    width: 3,
+    width: 2,
     height: 2,
-    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-right'],
+    terminals: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-right'],
     canRotate: true,
     maxCount: 2,
     image: '/photos/components/U2_Alarm.png',
@@ -105,9 +105,9 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
   space_war_ic: {
     type: 'space_war_ic',
     displayName: 'U3 Space War',
-    width: 3,
+    width: 2,
     height: 2,
-    terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-right'],
+    terminals: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-right'],
     canRotate: true,
     maxCount: 2,
     image: '/photos/components/U3_Space_War.png',

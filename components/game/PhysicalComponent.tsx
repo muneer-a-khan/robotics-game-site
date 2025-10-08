@@ -33,32 +33,23 @@ export function PhysicalComponent({ component, zIndex = 10 }: PhysicalComponentP
 
         const fullWidth = pattern.width * GRID_CONFIG.CELL_SIZE;
         const fullHeight = pattern.height * GRID_CONFIG.CELL_SIZE;
-        const thicknessFactor = 0.6;
-        const visualHeight = Math.max(16, Math.round(fullHeight * thicknessFactor));
 
         return {
           x: anchor.x,
-          y: anchor.y + Math.round(fullHeight / 2) - Math.round(visualHeight / 2),
+          y: anchor.y,
         };
       })();
 
-  const size = component.customPosition 
-    ? {
-        width: component.customPosition.width,
-        height: component.customPosition.height,
-      }
-    : (() => {
-        // Fallback sizing
-        const fullWidth = pattern.width * GRID_CONFIG.CELL_SIZE;
-        const fullHeight = pattern.height * GRID_CONFIG.CELL_SIZE;
-        const thicknessFactor = 0.6;
-        const visualHeight = Math.max(16, Math.round(fullHeight * thicknessFactor));
+  const size = (() => {
+    const fullWidth = pattern.width * GRID_CONFIG.CELL_SIZE;
+    const fullHeight = pattern.height * GRID_CONFIG.CELL_SIZE;
 
-        return {
-          width: fullWidth,
-          height: visualHeight,
-        };
-      })();
+    // Use full dimensions for better visibility and proper connection point coverage
+    return {
+      width: fullWidth,
+      height: fullHeight,
+    };
+  })();
   
   const handleRemove = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -130,12 +121,12 @@ export function PhysicalComponent({ component, zIndex = 10 }: PhysicalComponentP
         <div
           key={terminal.id}
           className={cn(
-            "absolute w-2 h-2 rounded-full",
-            terminal.isOccupied ? "bg-green-400" : "bg-gray-400"
+            "absolute w-3 h-3 rounded-full border-2 border-white shadow-md",
+            terminal.isOccupied ? "bg-green-500" : "bg-blue-500"
           )}
           style={{
-            left: (terminal.snapPoint.x - position.x) - 4,
-            top: (terminal.snapPoint.y - position.y) - 4,
+            left: terminal.snapPoint.x - position.x - 6,
+            top: terminal.snapPoint.y - position.y - 6,
           }}
         />
       ))}

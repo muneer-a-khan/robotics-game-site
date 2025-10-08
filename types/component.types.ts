@@ -24,7 +24,7 @@ export type ComponentState =
   | 'active'       // On board, part of circuit
   | 'invalid';     // Incorrectly placed
 
-export type TerminalPosition = 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'middle-right' | 'center-left' | 'center-right' | 'center';
+export type TerminalPosition = 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-right' | 'middle-right' | 'center-left' | 'center-right' | 'center';
 
 export interface SnapPoint {
   id: string;

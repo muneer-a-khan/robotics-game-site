@@ -22,6 +22,7 @@ export function SnapCircuitBoard() {
     highlightedSnapPoints,
     sessionId,
     placeComponent,
+    placeMusicCircuit,
     highlightSnapPoints,
   } = useGameState();
   
@@ -33,10 +34,15 @@ export function SnapCircuitBoard() {
   const [isOverlapMode, setIsOverlapMode] = useState(false);
   const [overlapSourceComponent, setOverlapSourceComponent] = useState<PhysicalComponent | null>(null);
   
+  // State for 5-point selection (music circuits)
+  const [selectedTerminals, setSelectedTerminals] = useState<SnapPoint[]>([]);
+  const isMusicCircuit = selectedComponent && ['music_ic', 'alarm_ic', 'space_war_ic'].includes(selectedComponent);
+  
   // Reset terminal selection when no component is selected
   useEffect(() => {
     if (!selectedComponent) {
       setFirstTerminal(null);
+      setSelectedTerminals([]);
     }
   }, [selectedComponent]);
   
@@ -82,28 +88,62 @@ export function SnapCircuitBoard() {
       }
     } else if (selectedComponent) {
       // Normal placement mode
-      if (!firstTerminal) {
-        // First terminal selected
-        console.log('Setting first terminal:', point.id);
-        setFirstTerminal(point);
-      } else {
-        // Second terminal selected - place component
-        console.log('Placing component with terminals:', firstTerminal.id, 'and', point.id);
-        const component = placeComponent(selectedComponent, firstTerminal, point);
-
-        // Track action
-        if (component) {
-          trackAction({
-            actionType: 'place',
-            componentType: component.type,
-            componentId: component.id,
-            snapPointIds: component.snapPoints.map(p => p.id),
-            orientation: component.orientation,
-          });
+      if (isMusicCircuit) {
+        // 5-point selection for music circuits
+        if (selectedTerminals.length < 5) {
+          // Add terminal if not already selected
+          if (!selectedTerminals.find(t => t.id === point.id)) {
+            setSelectedTerminals([...selectedTerminals, point]);
+            console.log(`Selected terminal ${selectedTerminals.length + 1}/5:`, point.id);
+          }
         }
+        
+        // If we have 5 terminals, place the component
+        if (selectedTerminals.length === 4) { // We just added the 5th one
+          const allTerminals = [...selectedTerminals, point];
+          console.log('Placing music circuit with 5 terminals:', allTerminals.map(t => t.id));
+          
+          // Place component with all 5 terminals
+          const component = placeMusicCircuit(selectedComponent, allTerminals);
+          
+          if (component) {
+            trackAction({
+              actionType: 'place',
+              componentType: component.type,
+              componentId: component.id,
+              snapPointIds: component.snapPoints.map(p => p.id),
+              orientation: component.orientation,
+            });
+          }
+          
+          // Reset selection
+          setSelectedTerminals([]);
+        }
+      } else {
+        // 2-point selection for regular components
+        if (!firstTerminal) {
+          // First terminal selected
+          console.log('Setting first terminal:', point.id);
+          setFirstTerminal(point);
+        } else {
+          // Second terminal selected - place component
+          console.log('Placing component with terminals:', firstTerminal.id, 'and', point.id);
+          const component = placeComponent(selectedComponent, firstTerminal, point);
 
-        // Reset selection
-        setFirstTerminal(null);
+          // Track action
+          if (component) {
+            trackAction({
+              actionType: 'place',
+              componentType: component.type,
+              componentId: component.id,
+              snapPointIds: component.snapPoints.map(p => p.id),
+              orientation: component.orientation,
+            });
+          }
+
+          // Reset selection
+          setFirstTerminal(null);
+        }
       }
     }
   };
@@ -116,10 +156,15 @@ export function SnapCircuitBoard() {
       {selectedComponent && !isOverlapMode && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            {firstTerminal
-              ? `Now click the second terminal for your ${selectedComponent} component`
-              : `Click the first terminal for your ${selectedComponent} component`
-            }
+            {isMusicCircuit ? (
+              selectedTerminals.length === 0
+                ? `Click 5 terminals for your ${selectedComponent} component (2 on bottom corners, 3 on top edge)`
+                : `Selected ${selectedTerminals.length}/5 terminals for your ${selectedComponent} component`
+            ) : (
+              firstTerminal
+                ? `Now click the second terminal for your ${selectedComponent} component`
+                : `Click the first terminal for your ${selectedComponent} component`
+            )}
           </p>
         </div>
       )}

@@ -177,6 +177,9 @@ function getTerminalSnapPoint(
     case 'top-left':
       // Already at anchor
       break;
+    case 'top-center':
+      col += Math.floor(width / 2);
+      break;
     case 'top-right':
       col += width - 1;
       break;

@@ -21,7 +21,7 @@ async function main() {
         id: 'battery-1',
         type: 'battery_holder',
         gridPosition: { x: 0, y: 1 },
-        orientation: 0,
+        orientation: 90,
         connectionPoints: [
           { id: 'battery-1-cp-0', position: 'top-right' },
           { id: 'battery-1-cp-1', position: 'bottom-right' }
@@ -77,7 +77,7 @@ async function main() {
         id: 'battery-1',
         type: 'battery_holder',
         gridPosition: { x: 0, y: 1 },
-        orientation: 0,
+        orientation: 90,
         connectionPoints: [
           { id: 'battery-1-cp-0', position: 'top-right' },
           { id: 'battery-1-cp-1', position: 'bottom-right' }
@@ -133,7 +133,7 @@ async function main() {
         id: 'battery-1',
         type: 'battery_holder',
         gridPosition: { x: 0, y: 1 },
-        orientation: 0,
+        orientation: 90,
         connectionPoints: [
           { id: 'battery-1-cp-0', position: 'top-right' },
           { id: 'battery-1-cp-1', position: 'bottom-right' }

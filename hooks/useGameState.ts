@@ -24,6 +24,16 @@ export function useGameState() {
   ) => {
     const componentId = `${componentType}-${Date.now()}`;
     
+    // Auto-calculate orientation based on terminal positions
+    const deltaX = Math.abs(terminal2.x - terminal1.x);
+    const deltaY = Math.abs(terminal2.y - terminal1.y);
+    
+    // If the connection is more vertical than horizontal, rotate 90 degrees
+    const calculatedOrientation = deltaY > deltaX ? 90 : 0;
+    
+    // Use calculated orientation if no explicit orientation provided
+    const finalOrientation = orientation === 0 ? calculatedOrientation : orientation;
+    
     // Calculate component position to be centered on the line between terminals
     const centerX = (terminal1.x + terminal2.x) / 2;
     const centerY = (terminal1.y + terminal2.y) / 2;
@@ -43,7 +53,7 @@ export function useGameState() {
       anchorPoint,
       componentType,
       state.snapGrid,
-      orientation
+      finalOrientation
     );
     
     // Create component with custom positioning
@@ -56,27 +66,27 @@ export function useGameState() {
         {
           id: `terminal-1-${componentId}`,
           componentId,
-          position: 'left',
+          position: finalOrientation === 90 ? 'top' : 'left',
           snapPoint: terminal1,
           isOccupied: true,
         },
         {
           id: `terminal-2-${componentId}`,
           componentId,
-          position: 'right',
+          position: finalOrientation === 90 ? 'bottom' : 'right',
           snapPoint: terminal2,
           isOccupied: true,
         }
       ],
-      orientation,
+      orientation: finalOrientation,
       isLocked: componentType === 'battery_holder',
       image: COMPONENT_PATTERNS[componentType].image,
-      // Custom positioning for line placement
+      // Custom positioning for line placement - use consistent component dimensions
       customPosition: {
         x: centerX,
         y: centerY,
-        width: Math.abs(terminal2.x - terminal1.x) + GRID_CONFIG.CELL_SIZE,
-        height: Math.abs(terminal2.y - terminal1.y) + GRID_CONFIG.CELL_SIZE,
+        width: COMPONENT_PATTERNS[componentType].width * GRID_CONFIG.CELL_SIZE,
+        height: COMPONENT_PATTERNS[componentType].height * GRID_CONFIG.CELL_SIZE,
       }
     };
     
@@ -85,6 +95,74 @@ export function useGameState() {
       payload: {
         component,
         snapPointIds: [terminal1.id, terminal2.id],
+      },
+    });
+    
+    return component;
+  }, [state.snapGrid, dispatch]);
+  
+  const placeMusicCircuit = useCallback((
+    componentType: ComponentType,
+    terminals: SnapPoint[]
+  ) => {
+    const componentId = `${componentType}-${Date.now()}`;
+    
+    // Calculate component position to be centered on the terminals
+    const centerX = terminals.reduce((sum, t) => sum + t.x, 0) / terminals.length;
+    const centerY = terminals.reduce((sum, t) => sum + t.y, 0) / terminals.length;
+    
+    // Create a virtual anchor point at the center
+    const anchorPoint: SnapPoint = {
+      id: `center-${componentId}`,
+      row: Math.round(centerY / GRID_CONFIG.CELL_SIZE),
+      col: Math.round(centerX / GRID_CONFIG.CELL_SIZE),
+      x: centerX,
+      y: centerY,
+      occupied: false,
+    };
+    
+    // Get occupied snap points
+    const snapPoints = getOccupiedSnapPoints(
+      anchorPoint,
+      componentType,
+      state.snapGrid,
+      0 // Default orientation for music circuits
+    );
+    
+    // Create terminals with proper positions based on the pattern
+    const pattern = COMPONENT_PATTERNS[componentType];
+    const createdTerminals = terminals.map((terminal, index) => ({
+      id: `terminal-${index}-${componentId}`,
+      componentId,
+      position: pattern.terminals[index] as any, // Use the pattern-defined positions
+      snapPoint: terminal,
+      isOccupied: true,
+    }));
+    
+    // Create component with custom positioning
+    const component: PhysicalComponent = {
+      id: componentId,
+      type: componentType,
+      state: 'placed',
+      snapPoints: terminals,
+      terminals: createdTerminals,
+      orientation: 0,
+      isLocked: componentType === 'battery_holder',
+      image: COMPONENT_PATTERNS[componentType].image,
+      // Custom positioning for music circuits
+      customPosition: {
+        x: centerX,
+        y: centerY,
+        width: COMPONENT_PATTERNS[componentType].width * GRID_CONFIG.CELL_SIZE,
+        height: COMPONENT_PATTERNS[componentType].height * GRID_CONFIG.CELL_SIZE,
+      }
+    };
+    
+    dispatch({
+      type: 'PLACE_COMPONENT',
+      payload: {
+        component,
+        snapPointIds: terminals.map(t => t.id),
       },
     });
     
@@ -133,6 +211,7 @@ export function useGameState() {
     // Actions
     selectComponent,
     placeComponent,
+    placeMusicCircuit,
     removeComponent,
     rotateComponent,
     highlightSnapPoints,
