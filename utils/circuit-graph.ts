@@ -19,8 +19,8 @@ export function createCircuitGraph(
   // Convert components to nodes
   const nodes: CircuitNode[] = components.map(component => {
     // Calculate grid position from component position
-    const gridX = Math.round(component.customPosition?.x / GRID_CONFIG.CELL_SIZE) || 0;
-    const gridY = Math.round(component.customPosition?.y / GRID_CONFIG.CELL_SIZE) || 0;
+    const gridX = component.customPosition ? Math.round(component.customPosition.x / GRID_CONFIG.CELL_SIZE) : 0;
+    const gridY = component.customPosition ? Math.round(component.customPosition.y / GRID_CONFIG.CELL_SIZE) : 0;
     
     // Extract terminal information
     const terminals = component.terminals.map(terminal => ({
@@ -47,10 +47,10 @@ export function createCircuitGraph(
   // Convert connections to edges
   const edges: CircuitEdge[] = connections.map(connection => ({
     id: connection.id,
-    fromNodeId: connection.from.componentId,
-    toNodeId: connection.to.componentId,
-    fromTerminalId: connection.from.id,
-    toTerminalId: connection.to.id
+    fromNodeId: connection.fromComponent,
+    toNodeId: connection.toComponent,
+    fromTerminalId: connection.from,
+    toTerminalId: connection.to
   }));
   
   return {
