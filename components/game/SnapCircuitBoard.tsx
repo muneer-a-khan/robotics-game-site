@@ -158,7 +158,7 @@ export function SnapCircuitBoard() {
           <p className="text-sm text-blue-800">
             {isMusicCircuit ? (
               selectedTerminals.length === 0
-                ? `Click 5 terminals for your ${selectedComponent} component (2 on bottom corners, 3 on top edge)`
+                ? `Click 5 terminals for your ${selectedComponent} component (2 on bottom corners, 3 on top edge). Component will auto-rotate if terminals are vertical.`
                 : `Selected ${selectedTerminals.length}/5 terminals for your ${selectedComponent} component`
             ) : (
               firstTerminal

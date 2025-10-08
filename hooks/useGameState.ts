@@ -111,6 +111,12 @@ export function useGameState() {
     const centerX = terminals.reduce((sum, t) => sum + t.x, 0) / terminals.length;
     const centerY = terminals.reduce((sum, t) => sum + t.y, 0) / terminals.length;
     
+    // Determine orientation based on terminal arrangement
+    // If terminals are more spread vertically than horizontally, rotate 90 degrees
+    const deltaX = Math.max(...terminals.map(t => t.x)) - Math.min(...terminals.map(t => t.x));
+    const deltaY = Math.max(...terminals.map(t => t.y)) - Math.min(...terminals.map(t => t.y));
+    const orientation = deltaY > deltaX ? 90 : 0;
+    
     // Create a virtual anchor point at the center
     const anchorPoint: SnapPoint = {
       id: `center-${componentId}`,
@@ -126,15 +132,36 @@ export function useGameState() {
       anchorPoint,
       componentType,
       state.snapGrid,
-      0 // Default orientation for music circuits
+      orientation
     );
     
-    // Create terminals with proper positions based on the pattern
+    // Create terminals with proper positions based on the pattern and orientation
     const pattern = COMPONENT_PATTERNS[componentType];
+    
+    // Map terminal positions based on orientation
+    const mapTerminalPositions = (basePositions: string[], orientation: number) => {
+      if (orientation === 90) {
+        // Rotate positions 90 degrees clockwise
+        // Original top edge (3 terminals) becomes right side
+        // Original bottom edge (2 terminals) becomes left side
+        const positionMap: Record<string, string> = {
+          'top-left': 'top-right',      // top-left -> top-right
+          'top-center': 'center-right', // top-center -> center-right  
+          'top-right': 'bottom-right',  // top-right -> bottom-right
+          'bottom-left': 'top-left',    // bottom-left -> top-left
+          'bottom-right': 'bottom-left' // bottom-right -> bottom-left
+        };
+        return basePositions.map(pos => positionMap[pos] || pos);
+      }
+      return basePositions;
+    };
+    
+    const adjustedPositions = mapTerminalPositions(pattern.terminals, orientation);
+    
     const createdTerminals = terminals.map((terminal, index) => ({
       id: `terminal-${index}-${componentId}`,
       componentId,
-      position: pattern.terminals[index] as any, // Use the pattern-defined positions
+      position: adjustedPositions[index] as any,
       snapPoint: terminal,
       isOccupied: true,
     }));
@@ -146,7 +173,7 @@ export function useGameState() {
       state: 'placed',
       snapPoints: terminals,
       terminals: createdTerminals,
-      orientation: 0,
+      orientation: orientation as 0 | 90 | 180 | 270,
       isLocked: componentType === 'battery_holder',
       image: COMPONENT_PATTERNS[componentType].image,
       // Custom positioning for music circuits
