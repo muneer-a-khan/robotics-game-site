@@ -24,6 +24,7 @@ export function SnapCircuitBoard() {
     placeComponent,
     placeMusicCircuit,
     placeBatteryHolder,
+    placeBatteryHolderWithOrientation,
     removeComponent,
     highlightSnapPoints,
   } = useGameState();
@@ -37,6 +38,7 @@ export function SnapCircuitBoard() {
   
   // State for multi-point selection (music circuits and battery holder)
   const [selectedTerminals, setSelectedTerminals] = useState<SnapPoint[]>([]);
+  const [showOrientationButtons, setShowOrientationButtons] = useState(false);
   const isMusicCircuit = selectedComponent && ['music_ic', 'alarm_ic', 'space_war_ic'].includes(selectedComponent);
   const isBatteryHolder = selectedComponent === 'battery_holder';
   const isMultiPointComponent = isMusicCircuit || isBatteryHolder;
@@ -46,6 +48,7 @@ export function SnapCircuitBoard() {
     if (!selectedComponent) {
       setFirstTerminal(null);
       setSelectedTerminals([]);
+      setShowOrientationButtons(false);
     }
   }, [selectedComponent]);
   
@@ -56,6 +59,29 @@ export function SnapCircuitBoard() {
     }
   }, [selectedComponent]);
   
+  const handleOrientationSelection = (orientation: 0 | 90) => {
+    if (selectedTerminals.length === 4 && selectedComponent === 'battery_holder') {
+      console.log(`Placing battery holder with orientation ${orientation}:`, selectedTerminals.map(t => t.id));
+      
+      // Place battery holder with selected orientation
+      const component = placeBatteryHolderWithOrientation(selectedComponent, selectedTerminals, orientation);
+      
+      if (component) {
+        trackAction({
+          actionType: 'place',
+          componentType: component.type,
+          componentId: component.id,
+          snapPointIds: component.snapPoints.map(p => p.id),
+          orientation: component.orientation,
+        });
+      }
+      
+      // Reset selection
+      setSelectedTerminals([]);
+      setShowOrientationButtons(false);
+    }
+  };
+
   const handleSnapPointClick = (point: SnapPoint) => {
     console.log('SnapPoint clicked:', point.id, 'selectedComponent:', selectedComponent, 'firstTerminal:', firstTerminal?.id, 'isDeleteMode:', isDeleteMode);
     
@@ -111,28 +137,34 @@ export function SnapCircuitBoard() {
           }
         }
         
-        // If we have enough terminals, place the component
+        // If we have enough terminals, handle placement
         if (currentCount === requiredPoints - 1) { // We just added the last one
           const allTerminals = [...selectedTerminals, point];
-          console.log(`Placing ${selectedComponent} with ${requiredPoints} terminals:`, allTerminals.map(t => t.id));
           
-          // Place component with all terminals
-          const component = isMusicCircuit 
-            ? placeMusicCircuit(selectedComponent, allTerminals)
-            : placeBatteryHolder(selectedComponent, allTerminals);
-          
-          if (component) {
-            trackAction({
-              actionType: 'place',
-              componentType: component.type,
-              componentId: component.id,
-              snapPointIds: component.snapPoints.map(p => p.id),
-              orientation: component.orientation,
-            });
+          if (isBatteryHolder) {
+            // For battery holder, show orientation selection after 4 points
+            console.log(`Selected 4 terminals for battery holder:`, allTerminals.map(t => t.id));
+            setSelectedTerminals(allTerminals);
+            setShowOrientationButtons(true);
+          } else {
+            // For music circuits, place immediately with 5 terminals
+            console.log(`Placing ${selectedComponent} with ${requiredPoints} terminals:`, allTerminals.map(t => t.id));
+            
+            const component = placeMusicCircuit(selectedComponent, allTerminals);
+            
+            if (component) {
+              trackAction({
+                actionType: 'place',
+                componentType: component.type,
+                componentId: component.id,
+                snapPointIds: component.snapPoints.map(p => p.id),
+                orientation: component.orientation,
+              });
+            }
+            
+            // Reset selection
+            setSelectedTerminals([]);
           }
-          
-          // Reset selection
-          setSelectedTerminals([]);
         }
       } else {
         // 2-point selection for regular components
@@ -168,14 +200,14 @@ export function SnapCircuitBoard() {
   return (
     <div className="relative">
       {/* Instructions */}
-      {selectedComponent && !isDeleteMode && (
+      {selectedComponent && !isDeleteMode && !showOrientationButtons && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             {isMultiPointComponent ? (
               selectedTerminals.length === 0
                 ? isMusicCircuit
                   ? `Click 5 terminals for your ${selectedComponent} component (2 on bottom corners, 3 on top edge). Component will auto-rotate if terminals are vertical.`
-                  : `Click 4 terminals for your ${selectedComponent} component (one on each corner). Component will auto-rotate if terminals are vertical.`
+                  : `Click 4 terminals for your ${selectedComponent} component (one on each corner).`
                 : `Selected ${selectedTerminals.length}/${isMusicCircuit ? 5 : 4} terminals for your ${selectedComponent} component`
             ) : (
               firstTerminal
@@ -183,6 +215,29 @@ export function SnapCircuitBoard() {
                 : `Click the first terminal for your ${selectedComponent} component`
             )}
           </p>
+        </div>
+      )}
+
+      {/* Orientation Selection for Battery Holder */}
+      {showOrientationButtons && selectedComponent === 'battery_holder' && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800 mb-3">
+            Select orientation for your battery holder:
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleOrientationSelection(0)}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Horizontal (0°)
+            </button>
+            <button
+              onClick={() => handleOrientationSelection(90)}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Vertical (90°)
+            </button>
+          </div>
         </div>
       )}
       
