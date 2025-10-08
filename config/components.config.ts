@@ -9,7 +9,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     width: 2,  // 2 columns wide
     height: 2, // 2 rows high
     terminals: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], // Connection points on each corner
-    canRotate: false,
+    canRotate: true,
     maxCount: 1,
     image: '/photos/components/battery_holder.png',
     color: '#DC2626'
@@ -23,6 +23,17 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
     canRotate: true,
     maxCount: 20,
     image: '/photos/components/wire.png',
+    color: '#2563EB'
+  },
+  wire_2: {
+    type: 'wire_2',
+    displayName: 'Wire 2',
+    width: 2,
+    height: 1,
+    terminals: ['left', 'right'],
+    canRotate: true,
+    maxCount: 20,
+    image: '/photos/components/wire_2.png',
     color: '#2563EB'
   },
   led_yellow: {
@@ -162,6 +173,7 @@ export const COMPONENT_PATTERNS: Record<ComponentType, ComponentPattern> = {
 export const AVAILABLE_COMPONENTS: ComponentType[] = [
   'battery_holder',
   'wire',
+  'wire_2',
   'led_yellow',
   'led_red',
   'resistor',

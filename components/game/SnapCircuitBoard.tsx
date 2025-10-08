@@ -23,6 +23,7 @@ export function SnapCircuitBoard() {
     sessionId,
     placeComponent,
     placeMusicCircuit,
+    placeBatteryHolder,
     removeComponent,
     highlightSnapPoints,
   } = useGameState();
@@ -34,9 +35,11 @@ export function SnapCircuitBoard() {
   const [firstTerminal, setFirstTerminal] = useState<SnapPoint | null>(null);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   
-  // State for 5-point selection (music circuits)
+  // State for multi-point selection (music circuits and battery holder)
   const [selectedTerminals, setSelectedTerminals] = useState<SnapPoint[]>([]);
   const isMusicCircuit = selectedComponent && ['music_ic', 'alarm_ic', 'space_war_ic'].includes(selectedComponent);
+  const isBatteryHolder = selectedComponent === 'battery_holder';
+  const isMultiPointComponent = isMusicCircuit || isBatteryHolder;
   
   // Reset terminal selection when no component is selected
   useEffect(() => {
@@ -95,23 +98,28 @@ export function SnapCircuitBoard() {
       }
     } else if (selectedComponent) {
       // Normal placement mode
-      if (isMusicCircuit) {
-        // 5-point selection for music circuits
-        if (selectedTerminals.length < 5) {
+      if (isMultiPointComponent) {
+        // Multi-point selection for music circuits (5 points) or battery holder (4 points)
+        const requiredPoints = isMusicCircuit ? 5 : 4;
+        const currentCount = selectedTerminals.length;
+        
+        if (currentCount < requiredPoints) {
           // Add terminal if not already selected
           if (!selectedTerminals.find(t => t.id === point.id)) {
             setSelectedTerminals([...selectedTerminals, point]);
-            console.log(`Selected terminal ${selectedTerminals.length + 1}/5:`, point.id);
+            console.log(`Selected terminal ${currentCount + 1}/${requiredPoints}:`, point.id);
           }
         }
         
-        // If we have 5 terminals, place the component
-        if (selectedTerminals.length === 4) { // We just added the 5th one
+        // If we have enough terminals, place the component
+        if (currentCount === requiredPoints - 1) { // We just added the last one
           const allTerminals = [...selectedTerminals, point];
-          console.log('Placing music circuit with 5 terminals:', allTerminals.map(t => t.id));
+          console.log(`Placing ${selectedComponent} with ${requiredPoints} terminals:`, allTerminals.map(t => t.id));
           
-          // Place component with all 5 terminals
-          const component = placeMusicCircuit(selectedComponent, allTerminals);
+          // Place component with all terminals
+          const component = isMusicCircuit 
+            ? placeMusicCircuit(selectedComponent, allTerminals)
+            : placeBatteryHolder(selectedComponent, allTerminals);
           
           if (component) {
             trackAction({
@@ -163,10 +171,12 @@ export function SnapCircuitBoard() {
       {selectedComponent && !isDeleteMode && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            {isMusicCircuit ? (
+            {isMultiPointComponent ? (
               selectedTerminals.length === 0
-                ? `Click 5 terminals for your ${selectedComponent} component (2 on bottom corners, 3 on top edge). Component will auto-rotate if terminals are vertical.`
-                : `Selected ${selectedTerminals.length}/5 terminals for your ${selectedComponent} component`
+                ? isMusicCircuit
+                  ? `Click 5 terminals for your ${selectedComponent} component (2 on bottom corners, 3 on top edge). Component will auto-rotate if terminals are vertical.`
+                  : `Click 4 terminals for your ${selectedComponent} component (one on each corner). Component will auto-rotate if terminals are vertical.`
+                : `Selected ${selectedTerminals.length}/${isMusicCircuit ? 5 : 4} terminals for your ${selectedComponent} component`
             ) : (
               firstTerminal
                 ? `Now click the second terminal for your ${selectedComponent} component`

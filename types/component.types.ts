@@ -3,6 +3,7 @@
 export type ComponentType = 
   | 'battery_holder'
   | 'wire'
+  | 'wire_2'
   | 'led_yellow'
   | 'led_red'
   | 'resistor'

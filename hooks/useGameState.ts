@@ -196,6 +196,105 @@ export function useGameState() {
     return component;
   }, [state.snapGrid, dispatch]);
   
+  const placeBatteryHolder = useCallback((
+    componentType: ComponentType,
+    terminals: SnapPoint[]
+  ) => {
+    const componentId = `${componentType}-${Date.now()}`;
+    
+    // Calculate component position to align corners with terminals
+    const minX = Math.min(...terminals.map(t => t.x));
+    const maxX = Math.max(...terminals.map(t => t.x));
+    const minY = Math.min(...terminals.map(t => t.y));
+    const maxY = Math.max(...terminals.map(t => t.y));
+    
+    // Position component so its corners align with the terminal positions
+    const componentX = minX;
+    const componentY = minY;
+    
+    // Determine orientation based on terminal arrangement
+    // If terminals are more spread vertically than horizontally, rotate 90 degrees
+    const deltaX = Math.max(...terminals.map(t => t.x)) - Math.min(...terminals.map(t => t.x));
+    const deltaY = Math.max(...terminals.map(t => t.y)) - Math.min(...terminals.map(t => t.y));
+    const orientation = deltaY > deltaX ? 90 : 0;
+    
+    // Create a virtual anchor point at the top-left corner
+    const anchorPoint: SnapPoint = {
+      id: `anchor-${componentId}`,
+      row: Math.round(componentY / GRID_CONFIG.CELL_SIZE),
+      col: Math.round(componentX / GRID_CONFIG.CELL_SIZE),
+      x: componentX,
+      y: componentY,
+      occupied: false,
+    };
+    
+    // Get occupied snap points
+    const snapPoints = getOccupiedSnapPoints(
+      anchorPoint,
+      componentType,
+      state.snapGrid,
+      orientation
+    );
+    
+    // Create terminals with proper positions based on the pattern and orientation
+    const pattern = COMPONENT_PATTERNS[componentType];
+    
+    // Map terminal positions based on orientation
+    const mapTerminalPositions = (basePositions: string[], orientation: number) => {
+      if (orientation === 90) {
+        // Rotate positions 90 degrees clockwise
+        // Original corners become rotated corners
+        const positionMap: Record<string, string> = {
+          'top-left': 'bottom-left',
+          'top-right': 'top-left',
+          'bottom-left': 'bottom-right',
+          'bottom-right': 'top-right'
+        };
+        return basePositions.map(pos => positionMap[pos] || pos);
+      }
+      return basePositions;
+    };
+    
+    const adjustedPositions = mapTerminalPositions(pattern.terminals, orientation);
+    
+    const createdTerminals = terminals.map((terminal, index) => ({
+      id: `terminal-${index}-${componentId}`,
+      componentId,
+      position: adjustedPositions[index] as any,
+      snapPoint: terminal,
+      isOccupied: true,
+    }));
+    
+    // Create component with custom positioning
+    const component: PhysicalComponent = {
+      id: componentId,
+      type: componentType,
+      state: 'placed',
+      snapPoints: terminals,
+      terminals: createdTerminals,
+      orientation: orientation as 0 | 90 | 180 | 270,
+      isLocked: false, // Battery holder is no longer locked
+      image: COMPONENT_PATTERNS[componentType].image,
+      // Custom positioning for battery holder - align corners with terminal positions
+      customPosition: {
+        x: componentX,
+        y: componentY,
+        width: maxX - minX,
+        height: maxY - minY,
+      }
+    };
+    
+    dispatch({
+      type: 'PLACE_COMPONENT',
+      payload: {
+        component,
+        snapPointIds: terminals.map(t => t.id),
+      },
+    });
+    
+    return component;
+  }, [state.snapGrid, dispatch]);
+  
   const removeComponent = useCallback((componentId: string) => {
     dispatch({ type: 'REMOVE_COMPONENT', payload: componentId });
   }, [dispatch]);
@@ -239,6 +338,7 @@ export function useGameState() {
     selectComponent,
     placeComponent,
     placeMusicCircuit,
+    placeBatteryHolder,
     removeComponent,
     rotateComponent,
     highlightSnapPoints,
