@@ -28,7 +28,7 @@ export function initializeSnapGrid(): SnapPoint[][] {
 
 /**
  * Get valid snap points for placing a component
- * NO VALIDATION - all grid intersections are clickable
+ * Validates that component fits within grid bounds and doesn't overlap occupied points
  */
 export function getValidSnapPoints(
   componentType: ComponentType,
@@ -36,15 +36,21 @@ export function getValidSnapPoints(
   existingComponents: Map<string, PhysicalComponent>,
   orientation: 0 | 90 | 180 | 270 = 0
 ): SnapPoint[] {
-  // Return ALL snap points - no validation
+  const pattern = COMPONENT_PATTERNS[componentType];
+  const { width, height } = getOrientedDimensions(pattern.width, pattern.height, orientation);
   const validPoints: SnapPoint[] = [];
-  
+
   for (let row = 0; row < snapGrid.length; row++) {
     for (let col = 0; col < snapGrid[row].length; col++) {
-      validPoints.push(snapGrid[row][col]);
+      const point = snapGrid[row][col];
+
+      // Use existing canPlaceComponent validation
+      if (canPlaceComponent(point, width, height, snapGrid, false)) {
+        validPoints.push(point);
+      }
     }
   }
-  
+
   return validPoints;
 }
 
