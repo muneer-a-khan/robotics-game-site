@@ -23,7 +23,7 @@ export function SnapPointGrid({ points, highlighted, firstTerminal, isDeleteMode
   return (
     <div className="absolute inset-0">
       {allPoints.map(point => {
-        const isDisabled = hasRestrictedSelection && !highlighted.includes(point.id) && point.id !== firstTerminal.id;
+        const isDisabled = !!(hasRestrictedSelection && !highlighted.includes(point.id) && point.id !== firstTerminal.id);
 
         return (
           <SnapPointKnob
