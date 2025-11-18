@@ -23,16 +23,43 @@ export function useGameState() {
     orientation: 0 | 90 | 180 | 270 = 0
   ) => {
     const componentId = `${componentType}-${Date.now()}`;
-    
+    const pattern = COMPONENT_PATTERNS[componentType];
+
     // Auto-calculate orientation based on terminal positions
     const deltaX = Math.abs(terminal2.x - terminal1.x);
     const deltaY = Math.abs(terminal2.y - terminal1.y);
-    
+
     // If the connection is more vertical than horizontal, rotate 90 degrees
     const calculatedOrientation = deltaY > deltaX ? 90 : 0;
-    
+
     // Use calculated orientation if no explicit orientation provided
     const finalOrientation = orientation === 0 ? calculatedOrientation : orientation;
+
+    // VALIDATION: Check that distance between terminals matches component size
+    const gridDistanceX = Math.abs(terminal2.col - terminal1.col);
+    const gridDistanceY = Math.abs(terminal2.row - terminal1.row);
+
+    // Get required size based on orientation
+    const requiredWidth = finalOrientation === 90 || finalOrientation === 270
+      ? pattern.height
+      : pattern.width;
+    const requiredHeight = finalOrientation === 90 || finalOrientation === 270
+      ? pattern.width
+      : pattern.height;
+
+    // Validate horizontal or vertical placement
+    const isHorizontal = gridDistanceY === 0 && gridDistanceX === requiredWidth - 1;
+    const isVertical = gridDistanceX === 0 && gridDistanceY === requiredHeight - 1;
+
+    if (!isHorizontal && !isVertical) {
+      alert(
+        `Invalid placement!\n\n` +
+        `${pattern.displayName} requires ${requiredWidth} grid points in a ${finalOrientation === 90 || finalOrientation === 270 ? 'vertical' : 'horizontal'} line.\n` +
+        `You selected points that are ${gridDistanceX + 1} units apart horizontally and ${gridDistanceY + 1} units apart vertically.\n\n` +
+        `Please select exactly ${requiredWidth} consecutive points in a straight line.`
+      );
+      return null;
+    }
     
     // Calculate component position to be centered on the line between terminals
     const centerX = (terminal1.x + terminal2.x) / 2;
@@ -106,11 +133,45 @@ export function useGameState() {
     terminals: SnapPoint[]
   ) => {
     const componentId = `${componentType}-${Date.now()}`;
-    
+    const pattern = COMPONENT_PATTERNS[componentType];
+
+    // VALIDATION: Check that we have exactly 5 terminals for music IC
+    if (terminals.length !== 5) {
+      alert(
+        `Invalid placement!\n\n` +
+        `${pattern.displayName} requires exactly 5 terminals.\n` +
+        `You selected ${terminals.length} terminals.`
+      );
+      return null;
+    }
+
+    // VALIDATION: Check that terminals form a valid 2×2 pattern
+    const minCol = Math.min(...terminals.map(t => t.col));
+    const maxCol = Math.max(...terminals.map(t => t.col));
+    const minRow = Math.min(...terminals.map(t => t.row));
+    const maxRow = Math.max(...terminals.map(t => t.row));
+
+    const widthInGrid = maxCol - minCol;
+    const heightInGrid = maxRow - minRow;
+
+    // Music IC is 2×2, so should span 1 grid unit in each direction (0 to 1 = 2 points)
+    const isValidHorizontal = widthInGrid === 1 && heightInGrid === 1;
+    const isValidVertical = widthInGrid === 1 && heightInGrid === 1;
+
+    if (!isValidHorizontal && !isValidVertical) {
+      alert(
+        `Invalid placement!\n\n` +
+        `${pattern.displayName} requires terminals forming a 2×2 grid pattern.\n` +
+        `Your selected terminals span ${widthInGrid + 1}×${heightInGrid + 1} grid units.\n\n` +
+        `Please select 5 terminals: 2 on bottom corners, 3 on top edge (left, center, right).`
+      );
+      return null;
+    }
+
     // Calculate component position to be centered on the terminals
     const centerX = terminals.reduce((sum, t) => sum + t.x, 0) / terminals.length;
     const centerY = terminals.reduce((sum, t) => sum + t.y, 0) / terminals.length;
-    
+
     // Determine orientation based on terminal arrangement
     // If terminals are more spread vertically than horizontally, rotate 90 degrees
     const deltaX = Math.max(...terminals.map(t => t.x)) - Math.min(...terminals.map(t => t.x));
@@ -134,10 +195,10 @@ export function useGameState() {
       state.snapGrid,
       orientation
     );
-    
+
     // Create terminals with proper positions based on the pattern and orientation
-    const pattern = COMPONENT_PATTERNS[componentType];
-    
+    // (pattern already defined at the top of function for validation)
+
     // Map terminal positions based on orientation
     const mapTerminalPositions = (basePositions: string[], orientation: number) => {
       if (orientation === 90) {
@@ -146,7 +207,7 @@ export function useGameState() {
         // Original bottom edge (2 terminals) becomes left side
         const positionMap: Record<string, string> = {
           'top-left': 'top-right',      // top-left -> top-right
-          'top-center': 'center-right', // top-center -> center-right  
+          'top-center': 'center-right', // top-center -> center-right
           'top-right': 'bottom-right',  // top-right -> bottom-right
           'bottom-left': 'top-left',    // bottom-left -> top-left
           'bottom-right': 'bottom-left' // bottom-right -> bottom-left
@@ -301,17 +362,51 @@ export function useGameState() {
     orientation: 0 | 90
   ) => {
     const componentId = `${componentType}-${Date.now()}`;
-    
+    const pattern = COMPONENT_PATTERNS[componentType];
+
+    // VALIDATION: Check that we have exactly 4 terminals for battery holder
+    if (terminals.length !== 4) {
+      alert(
+        `Invalid placement!\n\n` +
+        `${pattern.displayName} requires exactly 4 terminals (one on each corner).\n` +
+        `You selected ${terminals.length} terminals.`
+      );
+      return null;
+    }
+
     // Calculate component position to align corners with terminals
     const minX = Math.min(...terminals.map(t => t.x));
     const maxX = Math.max(...terminals.map(t => t.x));
     const minY = Math.min(...terminals.map(t => t.y));
     const maxY = Math.max(...terminals.map(t => t.y));
-    
+
+    // VALIDATION: Check that terminals form a valid rectangle
+    const minCol = Math.min(...terminals.map(t => t.col));
+    const maxCol = Math.max(...terminals.map(t => t.col));
+    const minRow = Math.min(...terminals.map(t => t.row));
+    const maxRow = Math.max(...terminals.map(t => t.row));
+
+    const widthInGrid = maxCol - minCol;
+    const heightInGrid = maxRow - minRow;
+
+    // Battery holder is 2×2, so should span 1 grid unit in each direction
+    const expectedWidth = orientation === 0 ? pattern.width - 1 : pattern.height - 1;
+    const expectedHeight = orientation === 0 ? pattern.height - 1 : pattern.width - 1;
+
+    if (widthInGrid !== expectedWidth || heightInGrid !== expectedHeight) {
+      alert(
+        `Invalid placement!\n\n` +
+        `${pattern.displayName} with ${orientation === 0 ? 'horizontal' : 'vertical'} orientation requires a ${expectedWidth + 1}×${expectedHeight + 1} rectangle.\n` +
+        `Your selected terminals form a ${widthInGrid + 1}×${heightInGrid + 1} rectangle.\n\n` +
+        `Please select 4 terminals forming the corners of a ${expectedWidth + 1}×${expectedHeight + 1} rectangle.`
+      );
+      return null;
+    }
+
     // Position component so its corners align with the terminal positions
     const componentX = minX;
     const componentY = minY;
-    
+
     // Create a virtual anchor point at the top-left corner
     const anchorPoint: SnapPoint = {
       id: `anchor-${componentId}`,
@@ -321,7 +416,7 @@ export function useGameState() {
       y: componentY,
       occupied: false,
     };
-    
+
     // Get occupied snap points
     const snapPoints = getOccupiedSnapPoints(
       anchorPoint,
@@ -329,9 +424,9 @@ export function useGameState() {
       state.snapGrid,
       orientation
     );
-    
+
     // Create terminals with proper positions based on the pattern and orientation
-    const pattern = COMPONENT_PATTERNS[componentType];
+    // (pattern already defined at the top of function for validation)
     
     // Map terminal positions based on orientation
     const mapTerminalPositions = (basePositions: string[], orientation: number) => {

@@ -7,7 +7,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useSnapLogic } from '@/hooks/useSnapLogic';
 import { useActionTracking } from '@/hooks/useActionTracking';
 import { SnapPoint } from '@/types/component.types';
-import { GRID_CONFIG } from '@/config/components.config';
+import { GRID_CONFIG, COMPONENT_PATTERNS } from '@/config/components.config';
 import { findOverlapTerminalSnapPosition } from '@/utils/snap-logic';
 import { SnapPointGrid } from './SnapPointGrid';
 import { PhysicalComponent } from './PhysicalComponent';
@@ -35,7 +35,8 @@ export function SnapCircuitBoard() {
   // State for two-terminal clicking
   const [firstTerminal, setFirstTerminal] = useState<SnapPoint | null>(null);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
-  
+  const [validSecondTerminals, setValidSecondTerminals] = useState<string[]>([]);
+
   // State for multi-point selection (music circuits and battery holder)
   const [selectedTerminals, setSelectedTerminals] = useState<SnapPoint[]>([]);
   const [showOrientationButtons, setShowOrientationButtons] = useState(false);
@@ -58,6 +59,30 @@ export function SnapCircuitBoard() {
       setIsDeleteMode(false);
     }
   }, [selectedComponent]);
+
+  // Calculate valid second terminals after first terminal is selected
+  useEffect(() => {
+    if (firstTerminal && selectedComponent && !isMultiPointComponent) {
+      const pattern = COMPONENT_PATTERNS[selectedComponent];
+      const validPoints = snapGrid.flat().filter(point => {
+        const distX = Math.abs(point.col - firstTerminal.col);
+        const distY = Math.abs(point.row - firstTerminal.row);
+
+        // Check horizontal placement (width - 1 distance, 0 vertical distance)
+        const isValidHorizontal = distY === 0 && distX === pattern.width - 1;
+
+        // Check vertical placement (width - 1 distance vertically, 0 horizontal distance)
+        // When rotated 90°, component's width becomes its vertical span
+        const isValidVertical = distX === 0 && distY === pattern.width - 1;
+
+        return isValidHorizontal || isValidVertical;
+      });
+
+      setValidSecondTerminals(validPoints.map(p => p.id));
+    } else {
+      setValidSecondTerminals([]);
+    }
+  }, [firstTerminal, selectedComponent, snapGrid, isMultiPointComponent]);
   
   const handleOrientationSelection = (orientation: 0 | 90) => {
     if (selectedTerminals.length === 4 && selectedComponent === 'battery_holder') {
@@ -210,9 +235,27 @@ export function SnapCircuitBoard() {
                   : `Click 4 terminals for your ${selectedComponent} component (one on each corner).`
                 : `Selected ${selectedTerminals.length}/${isMusicCircuit ? 5 : 4} terminals for your ${selectedComponent} component`
             ) : (
-              firstTerminal
-                ? `Now click the second terminal for your ${selectedComponent} component`
-                : `Click the first terminal for your ${selectedComponent} component`
+              firstTerminal ? (
+                <>
+                  <strong>Click the second terminal</strong> for your {COMPONENT_PATTERNS[selectedComponent].displayName}
+                  <br />
+                  <span className="text-xs mt-1 block opacity-75">
+                    Component size: {COMPONENT_PATTERNS[selectedComponent].width}×{COMPONENT_PATTERNS[selectedComponent].height} grid units
+                    {validSecondTerminals.length > 0
+                      ? ` • ${validSecondTerminals.length} valid position${validSecondTerminals.length > 1 ? 's' : ''} highlighted`
+                      : ` • No valid positions available (component doesn't fit)`
+                    }
+                  </span>
+                </>
+              ) : (
+                <>
+                  <strong>Click the first terminal</strong> for your {COMPONENT_PATTERNS[selectedComponent].displayName}
+                  <br />
+                  <span className="text-xs mt-1 block opacity-75">
+                    Component size: {COMPONENT_PATTERNS[selectedComponent].width}×{COMPONENT_PATTERNS[selectedComponent].height} grid units
+                  </span>
+                </>
+              )
             )}
           </p>
         </div>
@@ -339,7 +382,7 @@ export function SnapCircuitBoard() {
           <div className="absolute inset-0" style={{ zIndex: 20 }}>
             <SnapPointGrid
               points={snapGrid}
-              highlighted={[]} // No highlighting - all points are always clickable
+              highlighted={firstTerminal ? validSecondTerminals : highlightedSnapPoints}
               firstTerminal={firstTerminal}
               isDeleteMode={isDeleteMode}
               onPointClick={handleSnapPointClick}
