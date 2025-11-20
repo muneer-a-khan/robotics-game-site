@@ -190,10 +190,10 @@ export const AVAILABLE_COMPONENTS: ComponentType[] = [
 
 // Grid configuration
 export const GRID_CONFIG = {
-  ROWS: 5,      // A-E (up and down)
-  COLS: 7,      // 1-7 (side by side)
+  ROWS: 7,      // A-E (up and down)
+  COLS: 10,      // 1-7 (side by side)
   CELL_SIZE: 120, // pixels between snap points (increased for bigger board)
-  ROW_LABELS: ['A', 'B', 'C', 'D', 'E'],
-  COL_LABELS: ['1', '2', '3', '4', '5', '6', '7']
+  ROW_LABELS: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+  COL_LABELS: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 };
 
